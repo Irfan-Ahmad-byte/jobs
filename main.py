@@ -76,7 +76,10 @@ def extractJobs(url):
         companyName = False
 
       # Get the text content of the date span element
-      dayPosted = card.find("time", class_="job-search-card__listdate").text.strip()
+      try:
+        dayPosted = card.find("time", class_="job-search-card__listdate").text.strip()
+      except:
+        dayPosted = False
 
       # Create a dictionary with all these information and append it to results list 
       results.append({
@@ -99,9 +102,9 @@ def extractDescription(url):
   result = {}
 
   # Fetch the HTML content from the URL using requests library (or any other method)
+  print('getting descr:  ', url)
   try:
     res = requests.get(url)
-    print('getting descr:  ', url)
     html = res.text
     print('descr =*=*=*=*=*=*=>:  ', html)
 
@@ -192,9 +195,8 @@ def get_jobs(request: Request):
   
   
 if __name__ == "__main__":
-  ress = extractJobs(url1)
-  desc = extractDescription(ress[0]['jobURL'])
+  ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400')
   
-  print(desc)
+  print(json.dumps(ress))
   
   
