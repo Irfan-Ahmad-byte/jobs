@@ -1,0 +1,185 @@
+# Import FastAPI and requests libraries
+from fastapi import FastAPI, Query
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from bs4 import BeautifulSoup
+
+import requests
+import time
+import json
+import re
+
+
+origins = [
+    "http://localhost:8080",
+    "https://chatcv.net"
+]
+
+#from new_sendemail import send_email
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+
+url1 = 'https://www.linkedin.com/jobs/search?keywords=vue-developer'
+
+url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225'
+
+# A function that takes a URL for LinkedIn jobs search and returns a list of dictionaries containing job title, company name, day posted and URL of the job
+
+def extractJobs(url):
+
+  # Create an empty list to store the results
+  results = []
+
+  # Fetch the HTML content from the URL using requests library (or any other method)
+  try:
+    res = requests.get(url)
+    html = res.text
+
+    # Parse the HTML content using BeautifulSoup library (or any other method)
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Find all the elements with class name 'base-card' which contain each job listing
+    cards = soup.find_all("div", class_="base-card")
+    
+    print('Cards: =========', len(cards))
+
+    # Loop through each card element and extract the relevant information
+    for card in cards:
+      time.sleep(0.5)
+
+      # Get the text content and href attribute of the title link element
+      jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+      jobURL = card.find("a", class_="base-card__full-link").get("href")
+      
+      print('URL:  ==> ', jobURL)
+
+      # Get the text content of the company link element
+      companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
+
+      # Get the text content of the date span element
+      dayPosted = card.find("time", class_="job-search-card__listdate").text.strip()
+
+      # Create a dictionary with all these information and append it to results list 
+      results.append({
+        "jobTitle": jobTitle,
+        "companyName": companyName,
+        "dayPosted": dayPosted,
+        "jobURL": jobURL,
+      })
+
+  except Exception as error:
+    print(error)
+
+  # Return results list 
+  return results
+  
+def extractDescription(url):
+
+  # Create an empty dictionary to store the result
+  result = {}
+
+  # Fetch the HTML content from the URL using requests library (or any other method)
+  try:
+    res = requests.get(url)
+    html = res.text
+
+    # Parse the HTML content using BeautifulSoup library (or any other method)
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Find the element with class name 'description__text' which contains the job's description
+    descriptionDiv = soup.find("div", class_="description__text")
+
+    # Call the parseDescription function on this element and get the result dictionary 
+    result = parseDescription(descriptionDiv)
+
+  except Exception as error:
+    print(error)
+
+  # Return result dictionary 
+  return result
+
+
+
+def parseDescription(element):
+
+  # Create an empty dictionary to store the result
+  result = {}
+
+  # Get the text content of the element
+  description = re.sub('\\\n', '', element.text.strip())
+
+  # Add the complete description to result dictionary 
+  result["description"] = description
+
+  # Find all the strong elements which contain the headings of each section
+  headings = element.find_all("strong")
+
+  # Loop through each heading element and extract the relevant information
+  for heading in headings:
+    # Get the text content of the heading element
+    key = heading.text.strip()
+
+    # Get the next sibling element which contains the content of each section
+    content = heading.next_sibling
+
+    # Get the text content or inner HTML of the content element depending on its tag name
+    value = ""
+    if content.name == "p":
+      value = content.text.strip()
+    elif content.name == "ul":
+      value = content.decode_contents().strip()
+
+    # Add each section as a key-value pair to result dictionary 
+    result[key] = value
+
+  # Find all the li elements which contain each keyword
+  items = element.find_all("li")
+
+  # Create an empty list to store keywords
+  keywords = []
+
+  # Loop through each item element and extract the relevant information
+  for item in items:
+    # Get the text content of the item element
+    keyword = item.text.strip()
+
+    # Append it to keywords list 
+    keywords.append(keyword)
+    
+  # Add keywords to result dictionary 
+  result["keywords"] = keywords;
+
+  # Return result dictionary as a JSON string 
+  return json.dumps(result) 
+   
+   
+
+# Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
+@app.get("/jobs")
+def get_jobs(url: str = Query(...)):
+  return JSONResponse(content=extractJobs(url))
+  
+# Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
+@app.get("/description")
+def get_jobs(url: str = Query(...)):
+  return JSONResponse(content=extractDescription(url))
+  
+  
+if __name__ == "__main__":
+  ress = extractJobs(url1)
+  desc = extractDescription(ress[0]['jobURL'])
+  
+  print(desc)
+  
+  
