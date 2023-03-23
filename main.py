@@ -60,12 +60,23 @@ def extractJobs(url):
 
     # Loop through each card element and extract the relevant information
     for card in cards:
-      time.sleep(0.5)
+      time.sleep(1)
 
       # Get the text content and href attribute of the title link element
-      jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-      jobURL = card.find("a", class_="base-card__full-link").get("href")
-      jobDesc = extractDescription(jobURL)
+      try:
+        jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+      except:
+        jobTitle = False
+      try:
+        jobURL = card.find("a", class_="base-card__full-link").get("href")
+      except:
+        jobURL = False
+      try:
+        if jobURL:
+          jobDesc = extractDescription(jobURL)
+      except:
+        jobDesc = False
+        
       
       print('URL:  ==> ', jobURL)
 
