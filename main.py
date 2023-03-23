@@ -67,7 +67,7 @@ def extractJobs(url):
       jobURL = card.find("a", class_="base-card__full-link").get("href")
       jobDesc = extractDescription(jobURL)
       
-      print('URL:  ==> ', jobURL)
+      print(jobTitle, ' ', jobURL, ' ', )
 
       # Get the text content of the company link element
       try:
@@ -101,7 +101,9 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
     res = requests.get(url)
+    print('getting descr:  ', url)
     html = res.text
+    print('descr =*=*=*=*=*=*=>:  ', html)
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
