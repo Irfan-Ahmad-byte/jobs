@@ -9,6 +9,7 @@ import requests
 import time
 import json
 import re
+import urllib
 
 
 origins = [
@@ -175,8 +176,8 @@ def parseDescription(element):
 @app.get("/jobs")
 def get_jobs(url: str = Query(...)):
 
-  print('REQUESTED URI: ', url)
-  return JSONResponse(content=extractJobs(url))
+  print('REQUESTED URI: ', urllib.parse.quote_plus(url))
+  return JSONResponse(content=extractJobs(urllib.parse.quote_plus(url)))
   
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/description")
