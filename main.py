@@ -38,6 +38,8 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 def extractJobs(url):
 
+  print('Getting jobs')
+
   # Create an empty list to store the results
   results = []
 
@@ -170,6 +172,8 @@ def parseDescription(element):
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
 def get_jobs(url: str = Query(...)):
+
+  print('REQUESTED URI: ', url)
   return JSONResponse(content=extractJobs(url))
   
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
