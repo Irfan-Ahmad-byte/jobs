@@ -57,6 +57,7 @@ def extractJobs(url):
     print('Cards: =========', len(cards))
 
     # Loop through each card element and extract the relevant information
+    i = 0
     for card in cards:
     
       # Get the text content and href attribute of the title link element
@@ -86,6 +87,11 @@ def extractJobs(url):
         "jobURL": jobURL,
         'jobDesc': jobDesc
       })
+      
+      i += 1
+      
+      if i==9:
+        break
 
   except Exception as error:
     print(error)
