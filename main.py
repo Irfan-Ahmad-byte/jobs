@@ -173,9 +173,9 @@ def parseDescription(element):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-def get_jobs(request: Request):
+def get_jobs():
   
-  url = request.query_params.get('url', None)
+  url = 'https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400'
 
   print('REQUESTED URI: ', url)
   return JSONResponse(content=extractJobs(url))
