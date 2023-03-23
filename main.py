@@ -182,7 +182,7 @@ def get_jobs(url: str = Query(...)):
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/description")
 def get_jobs(url: str = Query(...)):
-  return JSONResponse(content=extractDescription(url))
+  return JSONResponse(content=extractDescription(urllib.parse.quote_plus(url)))
   
   
 if __name__ == "__main__":
