@@ -13,7 +13,7 @@ import re
 
 origins = [
     "http://localhost:8080",
-    "https://chatcv.net"
+    "https://irfan-ahmad.com"
 ]
 
 #from new_sendemail import send_email
