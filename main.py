@@ -146,10 +146,11 @@ def parseDescription(element):
 
     # Get the text content or inner HTML of the content element depending on its tag name
     value = ""
-    if content.name == "p":
-      value = content.text.strip()
-    elif content.name == "ul":
-      value = content.decode_contents().strip()
+    if content.name:
+      if content.name == "p":
+        value = content.text.strip()
+      elif content.name == "ul":
+        value = content.decode_contents().strip()
 
     # Add each section as a key-value pair to result dictionary 
     result[key] = value
