@@ -1,5 +1,5 @@
 # Import FastAPI and requests libraries
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -173,15 +173,17 @@ def parseDescription(element):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-def get_jobs(url: str):
+def get_jobs(request: Request):
+  
+  url = request.query_params.get('url', None)
 
   print('REQUESTED URI: ', url)
   return JSONResponse(content=extractJobs(url))
   
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/description")
-def get_jobs(url: str):
-  return JSONResponse(content=extractDescription(url))
+def get_jobs(request: Request):
+  return JSONResponse(content=extractDescription(request.query_params.get('url', None)))
   
   
 if __name__ == "__main__":
