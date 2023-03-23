@@ -50,6 +50,8 @@ def extractJobs(url):
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
+    
+    print(soup)
 
     # Find all the elements with class name 'base-card' which contain each job listing
     cards = soup.find_all("div", class_="base-card")
