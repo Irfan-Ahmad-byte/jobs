@@ -61,6 +61,7 @@ def extractJobs(url):
       # Get the text content and href attribute of the title link element
       jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
       jobURL = card.find("a", class_="base-card__full-link").get("href")
+      jobDesc = extractDescription(jobURL)
       
       print('URL:  ==> ', jobURL)
 
@@ -76,6 +77,7 @@ def extractJobs(url):
         "companyName": companyName,
         "dayPosted": dayPosted,
         "jobURL": jobURL,
+        'jobDesc': jobDesc
       })
 
   except Exception as error:
