@@ -82,7 +82,6 @@ def extractJobs(url, plavras):
       # Get the text content and href attribute of the title link element
       jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
       jobURL = card.find("a", class_="base-card__full-link").get("href")
-      jobLoc = LOCATION
       jobDesc = extractDescription(jobURL)
       rating = rate_job(jobDesc['description'], plavras)
       
@@ -106,9 +105,10 @@ def extractJobs(url, plavras):
         "companyName": companyName,
         "dayPosted": dayPosted,
         "jobURL": jobURL,
-        'jobDesc': jobDesc['description'],
         'location': jobDesc['location'],
+        'jobDesc': jobDesc['description'],
         'rating': rating,
+        'keywords': jobDesc['keywords']
       })
       
 
@@ -140,6 +140,8 @@ def extractDescription(url):
     if locationDiv is not None:
       location = locationDiv.find("span", class_="topcard__flavor").text.strip()
       result["location"] = location
+    else:
+      result["location"] = None
       
     # Call the parseDescription function on this element and get the result dictionary 
     result.update(parseDescription(descriptionDiv))
