@@ -128,7 +128,7 @@ def extractDescription(url):
   try:
     res = requests.get(url)
     html = res.text
-    print('descr =*=*=*=*=*=*=>:  ', html)
+    print('descr =*=*=*=*=*=*=>:  ')
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
@@ -178,11 +178,14 @@ def parseDescription(element):
 
     # Get the text content or inner HTML of the content element depending on its tag name
     value = ""
-    if content.name:
-      if content.name == "p":
-        value = content.text.strip()
-      elif content.name == "ul":
-        value = content.decode_contents().strip()
+    try:
+      if content.name:
+        if content.name == "p":
+          value = content.text.strip()
+        elif content.name == "ul":
+          value = content.decode_contents().strip()
+    except Exception as e:
+      print(e)
 
     # Add each section as a key-value pair to result dictionary 
     result[key] = value
