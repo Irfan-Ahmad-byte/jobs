@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from typing import Optional
 from woocommerce import API
+from docsim import rate_test
 import os
 
 
@@ -81,7 +82,7 @@ def extractJobs(url, plavras):
       jobURL = card.find("a", class_="base-card__full-link").get("href")
       jobLoc = LOCATION
       jobDesc = extractDescription(jobURL)
-      rating = rate_job(jobDesc, plavras)
+      rating = rate_job(jobDesc['description'], plavras)
       
       print(jobTitle, ' ', jobURL, ' ', )
 
@@ -203,20 +204,14 @@ def parseDescription(element):
   return json.dumps(result) 
    
    
-def rate_job(job_description, plavras):
+def rate_job(job_description, plavras=False):
     rating = 0
 
     # Check if there are any plavras for the user
     if not plavras:
         return rating
-
-    # Tokenize job description
-    words = job_description.split()
-
-    # Iterate through the words and compare them to the plavras
-    for word in words:
-        if word in plavras:
-            rating += 1
+        
+    rating = rate_test(plavras, job_description)
 
     return rating
 
@@ -258,21 +253,37 @@ def search_customer(id):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-def get_jobs(params: JobsParams):
+def get_jobs():
   
-  id = params.id
-  user = search_customer(id)
+#  id = params.id
+#  user = search_customer(id)
 
-  keywords = user['jobTitle'].replace(" ", "%20")
-  keywords = user['jobTitle'].replace(",", "%2C")
+#  keywords = user['jobTitle'].replace(" ", "%20")
+#  keywords = user['jobTitle'].replace(",", "%2C")
+  keywords = 'Engenharia%20Ambiental'
+#  location = user['location'].replace(" ", "%20")
+#  location = user['location'].replace(",", "%2C")
+  location = 'Brazil'
+#  time_period = params.time_period if params.time_period else None
+  time_period = 'f_TPR=r86400'
   
-  location = user['location'].replace(" ", "%20")
-  location = user['location'].replace(",", "%2C")
-  
-  time_period = params.time_period if params.time_period else None
-  
-  plavra = user['plavras']
-  
+#  plavra = user['plavras']
+  plavra = [
+  	'manter registros',
+	'projeto',
+	'arquivos',
+	'arquivos de programas',
+	'computador',
+	'registrar dados',
+	'avaliar',
+	'anomalias',
+	'revisar documentos',
+	'garantir',
+	'compartilhamento de tempo',
+	'levantar',
+	'rapidez',
+	'espanhol'
+	]
 
   url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{'&'time_period if time_period else ''}"
 
