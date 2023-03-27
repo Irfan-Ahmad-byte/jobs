@@ -302,7 +302,23 @@ def get_jobs(request: Request):
   
   
 if __name__ == "__main__":
-  ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400')
+  plavra = [
+  	'manter registros',
+	'projeto',
+	'arquivos',
+	'arquivos de programas',
+	'computador',
+	'registrar dados',
+	'avaliar',
+	'anomalias',
+	'revisar documentos',
+	'garantir',
+	'compartilhamento de tempo',
+	'levantar',
+	'rapidez',
+	'espanhol'
+	]
+  ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400', plavra)
   
   print(json.dumps(ress))
   
