@@ -4,6 +4,14 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
+from typing import Optional
+
+
+class JobsParams(BaseModel):
+    keywords: str
+    location: Optional[str] = 'Brazil'
+    time_period: Optional[str] = None
+
 
 import requests
 import time
@@ -36,6 +44,8 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 # A function that takes a URL for LinkedIn jobs search and returns a list of dictionaries containing job title, company name, day posted and URL of the job
 
+LOCATION = 'Brazil'
+
 def extractJobs(url):
 
   print('Getting jobs')
@@ -62,6 +72,7 @@ def extractJobs(url):
       # Get the text content and href attribute of the title link element
       jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
       jobURL = card.find("a", class_="base-card__full-link").get("href")
+      jobLoc = LOCATION
       jobDesc = extractDescription(jobURL)
       
       print(jobTitle, ' ', jobURL, ' ', )
@@ -111,9 +122,14 @@ def extractDescription(url):
 
     # Find the element with class name 'description__text' which contains the job's description
     descriptionDiv = soup.find("div", class_="description__text")
-
+    
+    locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
+    if locationDiv is not None:
+      location = locationDiv.find("span", class_="topcard__flavor").text.strip()
+      result["location"] = location
+      
     # Call the parseDescription function on this element and get the result dictionary 
-    result = parseDescription(descriptionDiv)
+    result.update(parseDescription(descriptionDiv))
 
   except Exception as error:
     print(error)
@@ -180,13 +196,22 @@ def parseDescription(element):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-def get_jobs():
+def get_jobs(params: JobsParams):
   
-  url = 'https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400'
+  keywords = params.keywords.replace(" ", "%20")
+  keywords = params.keywords.replace(",", "%2C")
+  
+  location = params.location.replace(" ", "%20")
+  location = params.location.replace(",", "%2C")
+  
+  time_period = params.time_period if params.time_period else None
+
+  url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{'&'time_period if time_period else ''}"
 
   print('REQUESTED URI: ', url)
   return JSONResponse(content=extractJobs(url))
-  
+
+
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/description")
 def get_jobs(request: Request):
