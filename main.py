@@ -5,19 +5,26 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from typing import Optional
+from woocommerce import API
+import os
 
 
 class JobsParams(BaseModel):
-    keywords: str
-    location: Optional[str] = 'Brazil'
-    time_period: Optional[str] = None
+    id: int
+    time_period: Optional[str] = False
 
+'''
+wcapi = API(
+    url="https://your_website_url",  # Replace with your website URL
+    consumer_key=os.environ['WOO_CONSUMER_KEY'],  # Replace with your consumer key
+    consumer_secret=os.environ['WOO_CONSUMER_SECRET'],  # Replace with your consumer secret
+    version="wc/v3"
+)
+'''
 
-import requests
-import time
-import json
-import re
-
+class CustomerSearch(BaseModel):
+    username: str
+    id: int
 
 origins = [
     "http://localhost:8080",
@@ -46,7 +53,7 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 LOCATION = 'Brazil'
 
-def extractJobs(url):
+def extractJobs(url, plavras):
 
   print('Getting jobs')
 
@@ -74,6 +81,7 @@ def extractJobs(url):
       jobURL = card.find("a", class_="base-card__full-link").get("href")
       jobLoc = LOCATION
       jobDesc = extractDescription(jobURL)
+      rating = rate_job(jobDesc, plavras)
       
       print(jobTitle, ' ', jobURL, ' ', )
 
@@ -95,7 +103,9 @@ def extractJobs(url):
         "companyName": companyName,
         "dayPosted": dayPosted,
         "jobURL": jobURL,
-        'jobDesc': jobDesc
+        'jobDesc': jobDesc['description'],
+        'location': jobDesc['location'],
+        'rating': rating,
       })
       
 
@@ -193,23 +203,81 @@ def parseDescription(element):
   return json.dumps(result) 
    
    
+def rate_job(job_description, plavras):
+    rating = 0
+
+    # Check if there are any plavras for the user
+    if not plavras:
+        return rating
+
+    # Tokenize job description
+    words = job_description.split()
+
+    # Iterate through the words and compare them to the plavras
+    for word in words:
+        if word in plavras:
+            rating += 1
+
+    return rating
+
+
+   
+#@app.post("/search_customer/")
+def search_customer(id):
+    customer_id = id
+
+    # Fetch the customer data from the WooCommerce API
+    customer = wcapi.get(f"customers/{customer_id}").json()
+
+    # Check if the customer data is valid
+    if "code" in customer:
+        return {"error": "Customer not found"}
+
+    # Extract metadata
+    meta_data = customer.get('meta_data', {})
+
+    job_title = 'Engenharia Ambiental'
+    location = 'Brazil'
+    plavras = []
+
+    for meta in meta_data:
+        if meta['key'] == 'jobTitle':
+            job_title = meta['value']
+        elif meta['key'] == 'plavras':
+            plavras = meta['value']
+        elif meta['key'] == 'location':
+            location = meta['value']
+
+    return {
+        "id": customer_id,
+	"jobTitle": job_title,
+	"plavras": plavras,
+	'location': location,
+	}
+    
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
 def get_jobs(params: JobsParams):
   
-  keywords = params.keywords.replace(" ", "%20")
-  keywords = params.keywords.replace(",", "%2C")
+  id = params.id
+  user = search_customer(id)
+
+  keywords = user['jobTitle'].replace(" ", "%20")
+  keywords = user['jobTitle'].replace(",", "%2C")
   
-  location = params.location.replace(" ", "%20")
-  location = params.location.replace(",", "%2C")
+  location = user['location'].replace(" ", "%20")
+  location = user['location'].replace(",", "%2C")
   
   time_period = params.time_period if params.time_period else None
+  
+  plavra = user['plavras']
+  
 
   url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{'&'time_period if time_period else ''}"
 
   print('REQUESTED URI: ', url)
-  return JSONResponse(content=extractJobs(url))
+  return JSONResponse(content=extractJobs(url, plavra))
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
