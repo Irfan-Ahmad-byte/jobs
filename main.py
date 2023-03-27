@@ -265,7 +265,7 @@ def get_jobs():
 #  location = user['location'].replace(",", "%2C")
   location = 'Brazil'
 #  time_period = params.time_period if params.time_period else None
-  time_period = 'f_TPR=r86400'
+  time_period = '&f_TPR=r86400'
   
 #  plavra = user['plavras']
   plavra = [
@@ -285,7 +285,7 @@ def get_jobs():
 	'espanhol'
 	]
 
-  url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{'&'time_period if time_period else ''}"
+  url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period if time_period}"
 
   print('REQUESTED URI: ', url)
   return JSONResponse(content=extractJobs(url, plavra))
