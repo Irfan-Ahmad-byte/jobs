@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from typing import Optional
 from woocommerce import API
-from docsim import rate_test
+from docsim import rate_text
 import os
 
 
@@ -211,7 +211,7 @@ def rate_job(job_description, plavras=False):
     if not plavras:
         return rating
         
-    rating = rate_test(plavras, job_description)
+    rating = rate_text(plavras, job_description)
 
     return rating
 

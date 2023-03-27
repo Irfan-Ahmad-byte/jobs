@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-def rate_test(plavra, text):
+def rate_text(plavra, text):
 	# Create a TF-idf vectorizer object
 	vectorizer = TfidfVectorizer()
 	
