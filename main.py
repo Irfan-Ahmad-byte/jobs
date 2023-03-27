@@ -8,7 +8,9 @@ from typing import Optional
 from woocommerce import API
 from docsim import rate_text
 import os
-
+import requests
+import json
+import re
 
 class JobsParams(BaseModel):
     id: int
