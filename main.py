@@ -12,6 +12,11 @@ import requests
 import json
 import re
 
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
 class JobsParams(BaseModel):
     id: int
     time_period: Optional[str] = False
@@ -58,7 +63,7 @@ LOCATION = 'Brazil'
 
 def extractJobs(url, plavras):
 
-  print('Getting jobs')
+  logging.info('Getting jobs from %s', url)
 
   # Create an empty list to store the results
   results = []
@@ -75,46 +80,53 @@ def extractJobs(url, plavras):
     cards = soup.find_all("div", class_="base-card")
     
     print('Cards: =========', len(cards))
-
-    # Loop through each card element and extract the relevant information
-    for card in cards:
     
-      # Get the text content and href attribute of the title link element
-      jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-      jobURL = card.find("a", class_="base-card__full-link").get("href")
-      jobDesc = extractDescription(jobURL)
-      rating = rate_job(jobDesc['description'], plavras)
+    tries = 1
+    
+    if len(cards) > 0:
+
+      # Loop through each card element and extract the relevant information
+      for card in cards:
       
-      print(jobTitle, ' ', jobURL, ' ', )
-
-      # Get the text content of the company link element
-      try:
-        companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
-      except:
-        companyName = False
-
-      # Get the text content of the date span element
-      try:
-        dayPosted = card.find("time", class_="job-search-card__listdate").text.strip()
-      except:
-        dayPosted = False
-
-      # Create a dictionary with all these information and append it to results list 
-      results.append({
-        "jobTitle": jobTitle,
-        "companyName": companyName,
-        "dayPosted": dayPosted,
-        "jobURL": jobURL,
-        'location': jobDesc['location'],
-        'jobDesc': jobDesc['description'],
-        'rating': rating,
-        'keywords': jobDesc['keywords']
-      })
+        # Get the text content and href attribute of the title link element
+        jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+        jobURL = card.find("a", class_="base-card__full-link").get("href")
+        jobDesc = extractDescription(jobURL)
+        rating = rate_job(jobDesc['description'], plavras)
+        
+        print(jobTitle, ' ', jobURL, ' ', )
+  
+        # Get the text content of the company link element
+        try:
+          companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
+        except:
+          companyName = False
+  
+        # Get the text content of the date span element
+        try:
+          dayPosted = card.find("time", class_="job-search-card__listdate").text.strip()
+        except:
+          dayPosted = False
+          
+  
+        # Create a dictionary with all these information and append it to results list 
+        results.append({
+          "jobTitle": jobTitle,
+          "companyName": companyName,
+          "dayPosted": dayPosted,
+           "jobURL": jobURL,
+          'location': jobDesc['location'],
+          'jobDesc': jobDesc['description'],
+          'rating': rating,
+          'keywords': jobDesc['keywords']
+        })
       
-
+        
+  
   except Exception as error:
-    print(error)
+    logging.error('Error while getting jobs: %s', str(e))
 
+  logging.info('Finished getting jobs from %s', url)
   # Return results list 
   return results
   
@@ -124,11 +136,10 @@ def extractDescription(url):
   result = {}
 
   # Fetch the HTML content from the URL using requests library (or any other method)
-  print('getting descr:  ', url)
+  logging.info('Getting job description from %s', url)
   try:
     res = requests.get(url)
     html = res.text
-    print('descr =*=*=*=*=*=*=>:  ')
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
@@ -143,11 +154,14 @@ def extractDescription(url):
     else:
       result["location"] = None
       
-    # Call the parseDescription function on this element and get the result dictionary 
+    # Call the parseDescription function on this element and get the result dictionary
+    
     result.update(parseDescription(descriptionDiv))
 
   except Exception as error:
-    print(error)
+    logging.error('Error while getting job description: %s', str(e))
+
+  logging.info('Finished getting job description from %s', url)
 
   # Return result dictionary 
   return result
@@ -161,6 +175,7 @@ def parseDescription(element):
 
   # Get the text content of the element
   description = re.sub('\\\n', '', element.text.strip())
+  print('descr =*=*=*=*=*=*=>:  ')
 
   # Add the complete description to result dictionary 
   result["description"] = description
@@ -178,14 +193,11 @@ def parseDescription(element):
 
     # Get the text content or inner HTML of the content element depending on its tag name
     value = ""
-    try:
-      if content.name:
-        if content.name == "p":
-          value = content.text.strip()
-        elif content.name == "ul":
-          value = content.decode_contents().strip()
-    except Exception as e:
-      print(e)
+    if content.name:
+      if content.name == "p":
+        value = content.text.strip()
+      elif content.name == "ul":
+        value = content.decode_contents().strip()
 
     # Add each section as a key-value pair to result dictionary 
     result[key] = value
@@ -208,10 +220,12 @@ def parseDescription(element):
   result["keywords"] = keywords;
 
   # Return result dictionary as a JSON string 
-  return json.dumps(result) 
+  return result
    
    
 def rate_job(job_description, plavras=False):
+    
+    print('Now rating jobs:/*/*/*/*/')
     rating = 0
 
     # Check if there are any plavras for the user
@@ -220,7 +234,7 @@ def rate_job(job_description, plavras=False):
         
     rating = rate_text(plavras, job_description)
 
-    return rating
+    return round(rating, 2)
 
 
    
@@ -321,8 +335,12 @@ if __name__ == "__main__":
 	'rapidez',
 	'espanhol'
 	]
-  ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400', plavra)
-  
-  print(json.dumps(ress))
-  
+  try:
+    ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400', plavra)
+
+    logging.info('Results: %s', ress)
+  except Exception as e:
+    logging.error('Error while running the application: %s', str(e))
+
+  logging.info('Finished running the application')
   
