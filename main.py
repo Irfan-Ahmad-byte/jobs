@@ -123,7 +123,7 @@ def extractJobs(url, plavras):
       
         
   
-  except Exception as error:
+  except Exception as e:
     logging.error('Error while getting jobs: %s', str(e))
 
   logging.info('Finished getting jobs from %s', url)
@@ -158,7 +158,7 @@ def extractDescription(url):
     
     result.update(parseDescription(descriptionDiv))
 
-  except Exception as error:
+  except Exception as e:
     logging.error('Error while getting job description: %s', str(e))
 
   logging.info('Finished getting job description from %s', url)
