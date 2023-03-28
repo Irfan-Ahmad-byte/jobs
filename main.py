@@ -174,7 +174,7 @@ def parseDescription(element):
   result = {}
 
   # Get the text content of the element
-  description = re.sub('\\\n', '', element.text.strip())
+  description = element.text.strip()
   print('descr =*=*=*=*=*=*=>:  ')
 
   # Add the complete description to result dictionary 
