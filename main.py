@@ -78,7 +78,7 @@ def extractJobs(url, plavras):
     soup = BeautifulSoup(html, "html.parser")
 
     # Find all the elements with class name 'base-card' which contain each job listing
-    cards = soup.find_all(True, class_="base-card")
+    cards = soup.find('ul', class_="jobs-search__results-list").find_all('li')
     
     print('Cards: =========', len(cards))
     
@@ -88,16 +88,9 @@ def extractJobs(url, plavras):
     
       # Get the text content and href attribute of the title link element
       jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-      try:
-        jobURL = card.find("a", class_="base-card__full-link")['href']
-      except:
-        jobURL = None
-      if jobURL:
-        jobDesc = extractDescription(jobURL)
-        rating = rate_job(jobDesc['description'], plavras)
-      else:
-        jobDesc = {'description':None, 'location':None, 'rating':None, 'keywords':None}
-        rating = None
+      jobURL = card.find("a")['href']
+      jobDesc = extractDescription(jobURL)
+      rating = rate_job(jobDesc['description'], plavras)
       
       print(jobTitle, ' ', jobURL, ' ', )
   
