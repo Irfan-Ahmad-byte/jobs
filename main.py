@@ -117,10 +117,6 @@ async def extractJobs(url, plavras):
           'rating': rating,
           'keywords': jobDesc['keywords']
       })
-        
-  
-  except Exception as e:
-    logging.error('Error while getting jobs: %s', str(e))
 
   logging.info('Finished getting jobs from %s', url)
   # Return results list 
@@ -157,8 +153,6 @@ async def extractDescription(url):
     
     result.update(parseDescription(descriptionDiv))
 
-  except Exception as e:
-    logging.error('Error while getting job description: %s', str(e))
 
   logging.info('Finished getting job description from %s', url)
 
