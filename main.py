@@ -127,7 +127,8 @@ def extractJobs(url, plavras):
     with ThreadPoolExecutor(max_workers=5) as executor:
       job_data = executor.map(get_job_info, cards)
     for job in job_data:
-      job.update({'rating': rate_job(job['description'], plavras)})
+      rating = rate_job(job['description'], plavras)
+      job['rating'] = rating
       results.append(job)
         
   
