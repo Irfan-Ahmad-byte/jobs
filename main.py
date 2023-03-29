@@ -267,7 +267,7 @@ def search_customer(id):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-def get_jobs():
+async def get_jobs():
   
 #  id = params.id
 #  user = search_customer(id)
@@ -307,7 +307,7 @@ def get_jobs():
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/description")
-def get_description(request: Request):
+async def get_description(request: Request):
   return JSONResponse(content=await extractDescription(request.query_params.get('url', None)))
   
   
