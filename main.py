@@ -82,36 +82,33 @@ def extractJobs(url, plavras):
     
     print('Cards: =========', len(cards))
     
-    tries = 1
-    
-    if len(cards) > 0:
 
-      # Loop through each card element and extract the relevant information
-      for card in cards:
+    # Loop through each card element and extract the relevant information
+    for card in cards:
+    
+      # Get the text content and href attribute of the title link element
+      jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+      jobURL = card.find("a", class_="base-card__full-link").get("href")
+      jobDesc = extractDescription(jobURL)
+      rating = rate_job(jobDesc['description'], plavras)
       
-        # Get the text content and href attribute of the title link element
-        jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-        jobURL = card.find("a", class_="base-card__full-link").get("href")
-        jobDesc = extractDescription(jobURL)
-        rating = rate_job(jobDesc['description'], plavras)
+      print(jobTitle, ' ', jobURL, ' ', )
+  
+      # Get the text content of the company link element
+      try:
+        companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
+      except:
+        companyName = False
+
+      # Get the text content of the date span element
+      try:
+        dayPosted = card.find("time").text.strip()
+      except:
+        dayPosted = False
         
-        print(jobTitle, ' ', jobURL, ' ', )
-  
-        # Get the text content of the company link element
-        try:
-          companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
-        except:
-          companyName = False
-  
-        # Get the text content of the date span element
-        try:
-          dayPosted = card.find("time").text.strip()
-        except:
-          dayPosted = False
-          
-  
-        # Create a dictionary with all these information and append it to results list 
-        results.append({
+
+      # Create a dictionary with all these information and append it to results list 
+      results.append({
           "jobTitle": jobTitle,
           "companyName": companyName,
           "dayPosted": dayPosted,
@@ -120,8 +117,7 @@ def extractJobs(url, plavras):
           'jobDesc': jobDesc['description'],
           'rating': rating,
           'keywords': jobDesc['keywords']
-        })
-      
+      })
         
   
   except Exception as e:
