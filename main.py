@@ -1,6 +1,5 @@
 # Import FastAPI and requests libraries
 from fastapi import FastAPI, Query, Request
-from sse_starlette.sse import EventSourceResponse
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +9,6 @@ from woocommerce import API
 from docsim import rate_text
 import os
 import requests
-import asyncio
 import json
 import re
 import time
@@ -65,7 +63,7 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 LOCATION = 'Brazil'
 
-async def extractJobs(url, plavras):
+def extractJobs(url, plavras):
 
   logging.info('Getting jobs from %s', url)
 
@@ -75,7 +73,7 @@ async def extractJobs(url, plavras):
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
     res = requests.get(url)
-    await asyncio.sleep(1)
+    time.sleep(1)
     html = res.text    
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -130,7 +128,7 @@ async def extractJobs(url, plavras):
   # Return results list 
   return results
   
-async def extractDescription(url):
+def extractDescription(url):
 
   # Create an empty dictionary to store the result
   result = {}
@@ -139,7 +137,7 @@ async def extractDescription(url):
   logging.info('Getting job description from %s', url)
   try:
     res = requests.get(url)
-    await asyncio.sleep(0.5)
+    time.sleep(0.5)
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -275,8 +273,8 @@ def search_customer(id):
     
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
-@app.get("/jobs", response_class=EventSourceResponse)
-async def get_jobs():
+@app.get("/jobs")
+def get_jobs():
   
 #  id = params.id
 #  user = search_customer(id)
@@ -310,12 +308,8 @@ async def get_jobs():
 
   url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0"
 
-  async def stream_jobs():
-    for job in extractJobs(url, plavra):
-      yield f"data: {json.dumps(job)}\n\n"
-      await asyncio.sleep(0.1)
-            
-  return stream_jobs()
+  print('REQUESTED URI: ', url)
+  return JSONResponse(content=extractJobs(url, plavra))
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
