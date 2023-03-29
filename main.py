@@ -124,7 +124,7 @@ def extractJobs(url, plavras, page=1):
     #  select cards to display on the selected page
     start_index = (page*13)-13	# starting index of cards for current page
     
-    cards = [start_index:page*13]
+    cards = cards[start_index:page*13]
     
     print('Cards: =========', len(cards))
     
