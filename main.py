@@ -105,7 +105,7 @@ def extractJobs(url, plavras):
   
         # Get the text content of the date span element
         try:
-          dayPosted = card.find("time", class_="job-search-card__listdate").text.strip()
+          dayPosted = card.find("time").text.strip()
         except:
           dayPosted = False
           
@@ -150,7 +150,7 @@ def extractDescription(url):
     
     locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
     if locationDiv is not None:
-      location = locationDiv.find("span", class_="topcard__flavor").text.strip()
+      location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
       result["location"] = location
     else:
       result["location"] = None
@@ -337,7 +337,7 @@ if __name__ == "__main__":
 	'espanhol'
 	]
   try:
-    ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400', plavra)
+    ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0', plavra)
 
     logging.info('Results: %s', ress)
   except Exception as e:
