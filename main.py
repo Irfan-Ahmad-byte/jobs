@@ -145,10 +145,11 @@ def extractDescription(url):
     descriptionDiv = soup.find("div", class_="description__text")
     
     locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
-    if locationDiv is not None:
-      location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
-      result["location"] = location
-    else:
+    try:
+      if locationDiv is not None:
+        location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
+        result["location"] = location
+    except:
       result["location"] = None
       
     # Call the parseDescription function on this element and get the result dictionary
