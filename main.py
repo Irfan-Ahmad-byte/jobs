@@ -147,7 +147,7 @@ def extractDescription(url):
   logging.info('Getting job description from %s', url)
   try:
     res = requests.get(url)
-    time.sleep(0.5)
+    time.sleep(1)
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
