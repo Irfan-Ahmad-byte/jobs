@@ -87,7 +87,7 @@ def extractJobs(url, plavras):
 
     # Loop through each card element and extract the relevant information
     for card in cards:
-      time.sleep(0.5)
+      time.sleep(0.3)
     
       # Get the text content and href attribute of the title link element
       jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
@@ -139,6 +139,7 @@ def extractDescription(url):
   logging.info('Getting job description from %s', url)
   try:
     res = requests.get(url)
+    time.sleep(0.5)
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
