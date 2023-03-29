@@ -21,7 +21,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 class JobsParams(BaseModel):
-    page: int = 1
+    page: int
 
 '''
 wcapi = API(
