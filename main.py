@@ -11,6 +11,7 @@ import os
 import requests
 import json
 import re
+import time
 
 import logging
 
@@ -72,7 +73,8 @@ def extractJobs(url, plavras):
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
     res = requests.get(url)
-    html = res.text
+    time.sleep(1)
+    html = res.text    
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
@@ -85,6 +87,7 @@ def extractJobs(url, plavras):
 
     # Loop through each card element and extract the relevant information
     for card in cards:
+      time.sleep(0.5)
     
       # Get the text content and href attribute of the title link element
       jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
