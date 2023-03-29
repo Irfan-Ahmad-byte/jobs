@@ -88,9 +88,16 @@ def extractJobs(url, plavras):
     
       # Get the text content and href attribute of the title link element
       jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-      jobURL = card.find("a", class_="base-card__full-link").get("href")
-      jobDesc = extractDescription(jobURL)
-      rating = rate_job(jobDesc['description'], plavras)
+      try:
+        jobURL = card.find("a", class_="base-card__full-link")['href']
+      except:
+        jobURL = None
+      if jobURL:
+        jobDesc = extractDescription(jobURL)
+        rating = rate_job(jobDesc['description'], plavras)
+      else:
+        jobDesc = {'description':None, 'location':None, 'rating':None, 'keywords':None}
+        rating = None
       
       print(jobTitle, ' ', jobURL, ' ', )
   
@@ -190,7 +197,7 @@ def parseDescription(element):
 
     # Get the text content or inner HTML of the content element depending on its tag name
     value = ""
-    if content.name:
+    if content:
       if content.name == "p":
         value = content.text.strip()
       elif content.name == "ul":
@@ -335,7 +342,7 @@ if __name__ == "__main__":
   try:
     ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0', plavra)
 
-    logging.info('Results: %s', ress)
+    logging.info('Results: %s', len(ress))
   except Exception as e:
     logging.error('Error while running the application: %s', str(e))
 
