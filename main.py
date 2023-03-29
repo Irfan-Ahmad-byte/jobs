@@ -137,14 +137,14 @@ def extractDescription(url):
   logging.info('Getting job description from %s', url)
   try:
     res = requests.get(url)
-    time.sleep(0.5)
+    time.sleep(0.2)
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
     
     # Find the element with class name 'description__text' which contains the job's description
-    descriptionDiv = soup.find("div", class_="description__text")
+    descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
     
     locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
     try:
