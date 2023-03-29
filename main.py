@@ -8,6 +8,7 @@ from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 from woocommerce import API
 from docsim import rate_text
+from itertools import repeat
 import os
 import requests
 import json
@@ -65,7 +66,7 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 LOCATION = 'Brazil'
 
 
-def get_job_info(card):
+def get_job_info(card, plavras):
 
   # Get the text content and href attribute of the title link element
   jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
@@ -85,6 +86,8 @@ def get_job_info(card):
     dayPosted = card.find("time").text.strip()
   except:
     dayPosted = False
+    
+  rating = rate_job(jobDesc['description'], plavras)
         
 
       # Create a dictionary with all these information and append it to results list 
@@ -93,6 +96,7 @@ def get_job_info(card):
           "companyName": companyName,
           "dayPosted": dayPosted,
            "jobURL": jobURL,
+           'rating': rating,
           'location': jobDesc['location'],
           'jobDesc': jobDesc['description'],
           'keywords': jobDesc['keywords']
@@ -121,14 +125,10 @@ def extractJobs(url, plavras):
     
 
     # Loop through each card element and extract the relevant information
-    for card in cards:
-      results.append(get_job_info(card))
       
     with ThreadPoolExecutor(max_workers=5) as executor:
-      job_data = executor.map(get_job_info, cards)
+      job_data = executor.map(get_job_info, cards, repeat(plavras))
     for job in job_data:
-      rating = rate_job(job['description'], plavras)
-      job['rating'] = rating
       results.append(job)
         
   
