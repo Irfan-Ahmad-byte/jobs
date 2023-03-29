@@ -1,6 +1,6 @@
 # Import FastAPI and requests libraries
 from fastapi import FastAPI, Query, Request
-from fastapi.responses import EventSourceResponse
+from sse_starlette.sse import EventSourceResponse
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
