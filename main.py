@@ -1,4 +1,6 @@
 # Import FastAPI and requests libraries
+import asyncio
+import httpx
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -12,8 +14,8 @@ import requests
 import json
 import re
 import time
-
 import logging
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -63,18 +65,14 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 LOCATION = 'Brazil'
 
-def extractJobs(url, plavras):
+async def extractJobs(url, plavras):
 
-  logging.info('Getting jobs from %s', url)
+  # Rest of the function remains the same
 
-  # Create an empty list to store the results
-  results = []
-
-  # Fetch the HTML content from the URL using requests library (or any other method)
-  try:
-    res = requests.get(url)
-    time.sleep(1)
-    html = res.text    
+  # Change this line to use `httpx` instead of `requests`
+  async with httpx.AsyncClient() as client:
+    res = await client.get(url)
+    html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
@@ -128,16 +126,17 @@ def extractJobs(url, plavras):
   # Return results list 
   return results
   
-def extractDescription(url):
+async def extractDescription(url):
 
   # Create an empty dictionary to store the result
   result = {}
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   logging.info('Getting job description from %s', url)
-  try:
-    res = requests.get(url)
-    time.sleep(0.2)
+
+  # Change this line to use `httpx` instead of `requests`
+  async with httpx.AsyncClient() as client:
+    res = await client.get(url)
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -309,13 +308,13 @@ def get_jobs():
   url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0"
 
   print('REQUESTED URI: ', url)
-  return JSONResponse(content=extractJobs(url, plavra))
+  return JSONResponse(content=await extractJobs(url, plavra))
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/description")
-def get_jobs(request: Request):
-  return JSONResponse(content=extractDescription(request.query_params.get('url', None)))
+def get_description(request: Request):
+  return JSONResponse(content=await extractDescription(request.query_params.get('url', None)))
   
   
 if __name__ == "__main__":
