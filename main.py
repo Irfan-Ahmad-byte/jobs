@@ -73,9 +73,12 @@ def extractJobs(url, plavras):
   try:
     res = requests.get(url)
     html = res.text
+    
+    time.sleep(1)
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
+    time.sleep(0.5)
 
     # Find all the elements with class name 'base-card' which contain each job listing
     cards = soup.find_all(True, class_="base-card")
@@ -85,7 +88,7 @@ def extractJobs(url, plavras):
 
     # Loop through each card element and extract the relevant information
     for card in cards:
-    
+      time.sleep(0.2)
       # Get the text content and href attribute of the title link element
       jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
       jobURL = card.find("a", class_="base-card__full-link").get("href")
