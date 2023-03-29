@@ -139,7 +139,7 @@ def extractDescription(url):
   logging.info('Getting job description from %s', url)
   try:
     res = requests.get(url)
-    time.sleep(1)
+    time.sleep(0.5)
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -162,6 +162,7 @@ def extractDescription(url):
 
   except Exception as e:
     logging.error('Error while getting job description: %s', str(e))
+    continue
 
   logging.info('Finished getting job description from %s', url)
 
