@@ -78,7 +78,7 @@ def extractJobs(url, plavras):
     soup = BeautifulSoup(html, "html.parser")
 
     # Find all the elements with class name 'base-card' which contain each job listing
-    cards = soup.find_all("div", class_="base-card")
+    cards = soup.find_all(True, class_="base-card")
     
     print('Cards: =========', len(cards))
     
