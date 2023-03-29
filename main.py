@@ -303,7 +303,7 @@ def get_jobs():
 	'espanhol'
 	]
 
-  url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}"
+  url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0"
 
   print('REQUESTED URI: ', url)
   return JSONResponse(content=extractJobs(url, plavra))
