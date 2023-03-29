@@ -21,8 +21,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 class JobsParams(BaseModel):
-    id: int
-    time_period: Optional[str] = False
+    page: int = 1
 
 '''
 wcapi = API(
@@ -102,7 +101,7 @@ def get_job_info(card, plavras):
           'keywords': jobDesc['keywords']
       }
 
-def extractJobs(url, plavras):
+def extractJobs(url, plavras, page=1):
 
   logging.info('Getting jobs from %s', url)
 
@@ -120,6 +119,12 @@ def extractJobs(url, plavras):
 
     # Find all the elements with class name 'base-card' which contain each job listing
     cards = soup.find('ul', class_="jobs-search__results-list").find_all('li')
+    total_cards = len(cards)
+    
+    #  select cards to display on the selected page
+    start_index = (page*13)-13	# starting index of cards for current page
+    
+    cards = [start_index:page*13]
     
     print('Cards: =========', len(cards))
     
@@ -137,7 +142,7 @@ def extractJobs(url, plavras):
 
   logging.info('Finished getting jobs from %s', url)
   # Return results list 
-  return results
+  return [results, total_cards]
   
 def extractDescription(url):
 
@@ -285,10 +290,11 @@ def search_customer(id):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-def get_jobs():
+def get_jobs(params: JobsParams):
   
 #  id = params.id
 #  user = search_customer(id)
+  page = params.page
 
 #  keywords = user['jobTitle'].replace(" ", "%20")
 #  keywords = user['jobTitle'].replace(",", "%2C")
@@ -320,7 +326,7 @@ def get_jobs():
   url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0"
 
   print('REQUESTED URI: ', url)
-  return JSONResponse(content=extractJobs(url, plavra))
+  return JSONResponse(content=extractJobs(url, plavra, 1))
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
