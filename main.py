@@ -1,12 +1,11 @@
 # Import FastAPI and requests libraries
-import asyncio
-import httpx
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
 from woocommerce import API
 from docsim import rate_text
 import os
@@ -14,8 +13,8 @@ import requests
 import json
 import re
 import time
-import logging
 
+import logging
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -65,14 +64,52 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 LOCATION = 'Brazil'
 
-async def extractJobs(url, plavras):
 
-  # Rest of the function remains the same
+def get_job_info(card):
 
-  # Change this line to use `httpx` instead of `requests`
-  async with httpx.AsyncClient() as client:
-    res = await client.get(url)
-    html = res.text
+  # Get the text content and href attribute of the title link element
+  jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+  jobURL = card.find("a")['href']
+  jobDesc = extractDescription(jobURL)
+      
+  print(jobTitle, ' ', jobURL, ' ', )
+  
+  # Get the text content of the company link element
+  try:
+    companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
+  except:
+    companyName = False
+
+  # Get the text content of the date span element
+  try:
+    dayPosted = card.find("time").text.strip()
+  except:
+    dayPosted = False
+        
+
+      # Create a dictionary with all these information and append it to results list 
+  return {
+          "jobTitle": jobTitle,
+          "companyName": companyName,
+          "dayPosted": dayPosted,
+           "jobURL": jobURL,
+          'location': jobDesc['location'],
+          'jobDesc': jobDesc['description'],
+          'keywords': jobDesc['keywords']
+      }
+
+def extractJobs(url, plavras):
+
+  logging.info('Getting jobs from %s', url)
+
+  # Create an empty list to store the results
+  results = []
+
+  # Fetch the HTML content from the URL using requests library (or any other method)
+  try:
+    res = requests.get(url)
+    time.sleep(1)
+    html = res.text    
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
@@ -85,54 +122,32 @@ async def extractJobs(url, plavras):
 
     # Loop through each card element and extract the relevant information
     for card in cards:
-      # Get the text content and href attribute of the title link element
-      jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-      jobURL = card.find("a")['href']
-      jobDesc = extractDescription(jobURL)
-      rating = rate_job(jobDesc['description'], plavras)
+      results.append(get_job_info(card))
       
-      print(jobTitle, ' ', jobURL, ' ', )
-  
-      # Get the text content of the company link element
-      try:
-        companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
-      except:
-        companyName = False
-
-      # Get the text content of the date span element
-      try:
-        dayPosted = card.find("time").text.strip()
-      except:
-        dayPosted = False
+    with ThreadPoolExecutor(max_workers=5) as executor:
+      job_data = executor.map(get_job_info, cards)
+      for job in job_data:
+        job.update({'rating': rate_job(job['description'], plavras)})
+        results.append(job)
         
-
-      # Create a dictionary with all these information and append it to results list 
-      results.append({
-          "jobTitle": jobTitle,
-          "companyName": companyName,
-          "dayPosted": dayPosted,
-           "jobURL": jobURL,
-          'location': jobDesc['location'],
-          'jobDesc': jobDesc['description'],
-          'rating': rating,
-          'keywords': jobDesc['keywords']
-      })
+  
+  except Exception as e:
+    logging.error('Error while getting jobs: %s', str(e))
 
   logging.info('Finished getting jobs from %s', url)
   # Return results list 
   return results
   
-async def extractDescription(url):
+def extractDescription(url):
 
   # Create an empty dictionary to store the result
   result = {}
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   logging.info('Getting job description from %s', url)
-
-  # Change this line to use `httpx` instead of `requests`
-  async with httpx.AsyncClient() as client:
-    res = await client.get(url)
+  try:
+    res = requests.get(url)
+    time.sleep(1)
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -153,6 +168,8 @@ async def extractDescription(url):
     
     result.update(parseDescription(descriptionDiv))
 
+  except Exception as e:
+    logging.error('Error while getting job description: %s', str(e))
 
   logging.info('Finished getting job description from %s', url)
 
@@ -267,7 +284,7 @@ def search_customer(id):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-async def get_jobs():
+def get_jobs():
   
 #  id = params.id
 #  user = search_customer(id)
@@ -302,13 +319,13 @@ async def get_jobs():
   url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0"
 
   print('REQUESTED URI: ', url)
-  return JSONResponse(content=await extractJobs(url, plavra))
+  return JSONResponse(content=extractJobs(url, plavra))
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/description")
-async def get_description(request: Request):
-  return JSONResponse(content=await extractDescription(request.query_params.get('url', None)))
+def get_jobs(request: Request):
+  return JSONResponse(content=extractDescription(request.query_params.get('url', None)))
   
   
 if __name__ == "__main__":
