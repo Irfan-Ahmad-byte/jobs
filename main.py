@@ -290,11 +290,11 @@ def search_customer(id):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-def get_jobs(jobparams: JobsParams):
+def get_jobs(request: Request):
   
 #  id = params.id
 #  user = search_customer(id)
-  page = jobparams.page
+  page = request.get('page')
 
 #  keywords = user['jobTitle'].replace(" ", "%20")
 #  keywords = user['jobTitle'].replace(",", "%2C")
