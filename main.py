@@ -163,11 +163,10 @@ def extractDescription(url):
     descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
     
     locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
-    try:
-      if locationDiv is not None:
-        location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
-        result["location"] = location
-    except:
+    if locationDiv is not None:
+      location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
+      result["location"] = location
+    else:
       result["location"] = None
       
     # Call the parseDescription function on this element and get the result dictionary
@@ -188,7 +187,7 @@ def parseDescription(element):
 
   # Create an empty dictionary to store the result
   result = {}
-
+  time.sleep(0.5)
   # Get the text content of the element
   description = element.text.strip()
   print('descr =*=*=*=*=*=*=>:  ')
@@ -355,7 +354,7 @@ if __name__ == "__main__":
   try:
     ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0', plavra)
 
-    logging.info('Results: %s', len(ress))
+    logging.info('Results: %s', len(ress[0]))
   except Exception as e:
     logging.error('Error while running the application: %s', str(e))
 
