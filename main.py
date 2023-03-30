@@ -10,6 +10,8 @@ from woocommerce import API
 from docsim import rate_text
 from itertools import repeat
 import os
+import csv
+import random
 import requests
 import json
 import re
@@ -110,7 +112,12 @@ def extractJobs(url, plavras, page=1):
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
-    res = requests.get(url)
+    with open('selected_proxies.csv', 'r') as csvfile:
+      reader = csv.reader(csvfile)
+      proxies = [row[0] for row in reader]
+    proxy = random.choice(proxies)
+        
+    res = requests.get(url, proxies={'http': proxy, 'https': proxy})
     time.sleep(1)
     html = res.text    
 
@@ -152,7 +159,12 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   logging.info('Getting job description from %s', url)
   try:
-    res = requests.get(url)
+    with open('selected_proxies.csv', 'r') as csvfile:
+      reader = csv.reader(csvfile)
+      proxies = [row[0] for row in reader]
+    proxy = random.choice(proxies)
+        
+    res = requests.get(url, proxies={'http': proxy, 'https': proxy})
     time.sleep(1)
     html = res.text
 
