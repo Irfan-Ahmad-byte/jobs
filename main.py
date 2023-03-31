@@ -14,6 +14,7 @@ import requests
 import json
 import re
 import time
+import random
 
 import logging
 
@@ -70,6 +71,9 @@ def get_job_info(card, plavras):
   # Get the text content and href attribute of the title link element
   jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
   jobURL = card.find("a")['href']
+  
+  with open('urls.txt', 'a') as fl:
+    fl.write('\n'+jobURL)
   jobDesc = extractDescription(jobURL)
       
   print(jobTitle, ' ', jobURL, ' ', )
@@ -153,7 +157,7 @@ def extractDescription(url):
   logging.info('Getting job description from %s', url)
   try:
     res = requests.get(url)
-    time.sleep(1)
+    time.sleep(random.uniform(0.5, 3))
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -174,7 +178,7 @@ def extractDescription(url):
     result.update(parseDescription(descriptionDiv))
 
   except Exception as e:
-    logging.error('Error while getting job description: %s', str(e))
+    logging.error('Error while getting job description: %s, %s', str(e), url)
 
   logging.info('Finished getting job description from %s', url)
 
