@@ -162,77 +162,73 @@ def extractDescription(url):
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   logging.info('Getting job description from %s', url)
-  try:
-    time.sleep(random.uniform(0.5, 3))
-    res = requests.get(url)
-    time.sleep(random.uniform(0.5, 3))
-    html = res.text
+  
+  time.sleep(random.uniform(0.5, 3))
+  res = requests.get(url)
+  time.sleep(random.uniform(0.5, 3))
+  html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
-    soup = BeautifulSoup(html, "html.parser")
+  soup = BeautifulSoup(html, "html.parser")
     
     # Find the element with class name 'description__text' which contains the job's description
-    descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
+  descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
     
-    locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
-    if locationDiv is not None:
-      try:
-        location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
-        result["location"] = location
-      except:
-        result["location"] = None
-    else:
+  locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
+  if locationDiv is not None:
+    try:
+      location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
+      result["location"] = location
+    except:
       result["location"] = None
-      
+  else:
+    result["location"] = None
+    
     # Call the parseDescription function on this element and get the result dictionary
     
-    time.sleep(0.5)
+  time.sleep(0.5)
     # Get the text content of the element
-    if descriptionDiv is not None:
-      description = descriptionDiv.text.strip()
-    else:
-      description = 'no description specified'
+  if descriptionDiv is not None:
+    description = descriptionDiv.text.strip()
+  else:
+    description = 'no description specified'
       
-    print('descr =*=*=*=*=*=*=>:  ')
+  print('descr =*=*=*=*=*=*=>:  ')
 
     # Add the complete description to result dictionary 
-    result["description"] = description
+  result["description"] = description
 
     # Find all the strong elements which contain the headings of each section
-    headings = descriptionDiv.find_all("strong")
+  headings = descriptionDiv.find_all("strong")
 
     # Loop through each heading element and extract the relevant information
-    for heading in headings:
-      # Get the text content of the heading element
-      key = heading.text.strip()
+  for heading in headings:
+    # Get the text content of the heading element
+    key = heading.text.strip()
 
       # Get the next sibling element which contains the content of each section
-      content = heading.next_sibling
+    content = heading.next_sibling
       
       # Get the text content or inner HTML of the content element depending on its tag name
-      value = ""
-      if content:
-        if content.name == "p":
-          value = content.text.strip()
-        elif content.name == "ul":
-          value = content.decode_contents().strip()
+    value = ""
+    if content:
+      if content.name == "p":
+        value = content.text.strip()
+      elif content.name == "ul":
+        value = content.decode_contents().strip()
 
       # Add each section as a key-value pair to result dictionary 
-      result[key] = value
+    result[key] = value
   
     # Find all the li elements which contain each keyword
-    items = descriptionDiv.find_all("li")
+  items = descriptionDiv.find_all("li")
 
     # Create an empty list to store keywords
-    keywords = [description.split(" ")]
+  keywords = [description.split(" ")]
       
         # Add keywords to result dictionary 
-    result["keywords"] = keywords;
+  result["keywords"] = keywords;
 
-  except Exception as e:
-    logging.error('Error while getting job description: %s, %s', str(e), url)
-
-  logging.info('Finished getting job description from %s', url)
 
   # Return result dictionary 
   return result
