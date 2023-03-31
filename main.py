@@ -101,8 +101,7 @@ def get_job_info(card, plavras):
            "jobURL": jobURL,
            'rating': rating,
           'location': jobDesc['location'],
-          'jobDesc': jobDesc['description'],
-          'keywords': jobDesc['keywords']
+          'jobDesc': jobDesc['description']
       }
 
 
@@ -219,12 +218,6 @@ def extractDescription(url):
 
       # Add each section as a key-value pair to result dictionary 
       result[key] = value
-
-    # Create an empty list to store keywords
-    keywords = [description.split(" ")]
-      
-        # Add keywords to result dictionary 
-    result["keywords"] = keywords;
 
   except Exception as e:
     logging.error('Error while getting job description: %s, %s', str(e), url)
