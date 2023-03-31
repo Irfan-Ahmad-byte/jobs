@@ -142,6 +142,8 @@ def extractJobs(url, plavras, page=1):
     #results = [get_job_info(card, plavras) for card in cards]
     with ThreadPoolExecutor(max_workers=5) as executor:
       job_data = executor.map(process_url, cards, repeat(plavras))
+      
+    job_data_list = list(job_data)
     for job in job_data:
       results.append(job)
         
