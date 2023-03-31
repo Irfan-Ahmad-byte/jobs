@@ -217,17 +217,9 @@ def extractDescription(url):
     items = descriptionDiv.find_all("li")
 
     # Create an empty list to store keywords
-    keywords = []
-
-    # Loop through each item element and extract the relevant information
-    for item in items:
-      # Get the text content of the item element
-      keyword = item.text.strip()
+    keywords = [description.split(" ")]
       
-      # Append it to keywords list 
-      keywords.append(keyword)
-    
-    # Add keywords to result dictionary 
+        # Add keywords to result dictionary 
     result["keywords"] = keywords;
 
   except Exception as e:
