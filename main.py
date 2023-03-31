@@ -103,10 +103,6 @@ def get_job_info(card, plavras):
           'location': jobDesc['location'],
           'jobDesc': jobDesc['description']
       }
-
-
-def process_url(card, plavras):
-    return get_job_info(card, plavras)
     
     
 def extractJobs(url, plavras, page=1):
@@ -140,7 +136,7 @@ def extractJobs(url, plavras, page=1):
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
     with ThreadPoolExecutor(max_workers=5) as executor:
-      job_data = executor.map(process_url, cards, repeat(plavras))
+      job_data = executor.map(get_job_info, cards, repeat(plavras))
       
     job_data_list = list(job_data)
     for job in job_data:
@@ -189,27 +185,6 @@ def extractDescription(url):
     # Get the text content of the element
     if descriptionDiv is not None:
       description = descriptionDiv.text.strip()
-      
-      # Find all the strong elements which contain the headings of each section
-      headings = descriptionDiv.find_all("strong")
-      # Loop through each heading element and extract the relevant information
-      for heading in headings:
-        # Get the text content of the heading element
-        key = heading.text.strip()
-
-        # Get the next sibling element which contains the content of each section
-        content = heading.next_sibling
-        
-        # Get the text content or inner HTML of the content element depending on its tag name
-        value = ""
-        if content:
-          if content.name == "p":
-            value = content.text.strip()
-          elif content.name == "ul":
-            value = content.decode_contents().strip()
-  
-        # Add each section as a key-value pair to result dictionary 
-        result[key] = value
     else:
       description = 'no description specified'
       
@@ -219,9 +194,9 @@ def extractDescription(url):
     result["description"] = description
 
   except Exception as e:
-    logging.error('Error while getting job description: %s, %s', str(e), url)
+    print('Error while getting job description: %s, %s', str(e), url)
 
-  logging.info('Finished getting job description from %s', url)
+  print('Finished getting job description from %s', url)
 
   # Return result dictionary 
   return result
