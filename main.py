@@ -189,6 +189,27 @@ def extractDescription(url):
     # Get the text content of the element
     if descriptionDiv is not None:
       description = descriptionDiv.text.strip()
+      
+      # Find all the strong elements which contain the headings of each section
+      headings = descriptionDiv.find_all("strong")
+      # Loop through each heading element and extract the relevant information
+      for heading in headings:
+        # Get the text content of the heading element
+        key = heading.text.strip()
+
+        # Get the next sibling element which contains the content of each section
+        content = heading.next_sibling
+        
+        # Get the text content or inner HTML of the content element depending on its tag name
+        value = ""
+        if content:
+          if content.name == "p":
+            value = content.text.strip()
+          elif content.name == "ul":
+            value = content.decode_contents().strip()
+  
+        # Add each section as a key-value pair to result dictionary 
+        result[key] = value
     else:
       description = 'no description specified'
       
@@ -196,28 +217,6 @@ def extractDescription(url):
 
     # Add the complete description to result dictionary 
     result["description"] = description
-
-    # Find all the strong elements which contain the headings of each section
-    headings = descriptionDiv.find_all("strong")
-
-    # Loop through each heading element and extract the relevant information
-    for heading in headings:
-      # Get the text content of the heading element
-      key = heading.text.strip()
-
-      # Get the next sibling element which contains the content of each section
-      content = heading.next_sibling
-      
-      # Get the text content or inner HTML of the content element depending on its tag name
-      value = ""
-      if content:
-        if content.name == "p":
-          value = content.text.strip()
-        elif content.name == "ul":
-          value = content.decode_contents().strip()
-
-      # Add each section as a key-value pair to result dictionary 
-      result[key] = value
 
   except Exception as e:
     logging.error('Error while getting job description: %s, %s', str(e), url)
