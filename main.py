@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from typing import Optional
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from woocommerce import API
 from docsim import rate_text
 from itertools import repeat
@@ -105,6 +105,11 @@ def get_job_info(card, plavras):
           'keywords': jobDesc['keywords']
       }
 
+
+def process_url(card, plavras):
+    return get_job_info(card, plavras)
+    
+    
 def extractJobs(url, plavras, page=1):
 
   logging.info('Getting jobs from %s', url)
@@ -135,8 +140,8 @@ def extractJobs(url, plavras, page=1):
 
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
-    with ProcessPoolExecutor(max_workers=4) as executor:
-      job_data = executor.map(get_job_info, cards, repeat(plavras))
+    with ThreadPoolExecutor(max_workers=5) as executor:
+      job_data = executor.map(process_url, cards, repeat(plavras))
     for job in job_data:
       results.append(job)
         
