@@ -176,7 +176,52 @@ def extractDescription(url):
       
     # Call the parseDescription function on this element and get the result dictionary
     
-    result.update(parseDescription(descriptionDiv))
+    time.sleep(0.5)
+    # Get the text content of the element
+    description = descriptionDiv.text.strip()
+    print('descr =*=*=*=*=*=*=>:  ')
+
+    # Add the complete description to result dictionary 
+    result["description"] = description
+
+    # Find all the strong elements which contain the headings of each section
+    headings = descriptionDiv.find_all("strong")
+
+    # Loop through each heading element and extract the relevant information
+    for heading in headings:
+      # Get the text content of the heading element
+      key = heading.text.strip()
+
+      # Get the next sibling element which contains the content of each section
+      content = heading.next_sibling
+      
+      # Get the text content or inner HTML of the content element depending on its tag name
+      value = ""
+      if content:
+        if content.name == "p":
+          value = content.text.strip()
+        elif content.name == "ul":
+          value = content.decode_contents().strip()
+
+      # Add each section as a key-value pair to result dictionary 
+      result[key] = value
+  
+    # Find all the li elements which contain each keyword
+    items = descriptionDiv.find_all("li")
+
+    # Create an empty list to store keywords
+    keywords = []
+
+    # Loop through each item element and extract the relevant information
+    for item in items:
+      # Get the text content of the item element
+      keyword = item.text.strip()
+      
+      # Append it to keywords list 
+      keywords.append(keyword)
+    
+    # Add keywords to result dictionary 
+    result["keywords"] = keywords;
 
   except Exception as e:
     logging.error('Error while getting job description: %s, %s', str(e), url)
@@ -186,62 +231,6 @@ def extractDescription(url):
   # Return result dictionary 
   return result
 
-
-
-def parseDescription(element):
-
-  # Create an empty dictionary to store the result
-  result = {}
-  time.sleep(0.5)
-  # Get the text content of the element
-  description = element.text.strip()
-  print('descr =*=*=*=*=*=*=>:  ')
-
-  # Add the complete description to result dictionary 
-  result["description"] = description
-
-  # Find all the strong elements which contain the headings of each section
-  headings = element.find_all("strong")
-
-  # Loop through each heading element and extract the relevant information
-  for heading in headings:
-    # Get the text content of the heading element
-    key = heading.text.strip()
-
-    # Get the next sibling element which contains the content of each section
-    content = heading.next_sibling
-
-    # Get the text content or inner HTML of the content element depending on its tag name
-    value = ""
-    if content:
-      if content.name == "p":
-        value = content.text.strip()
-      elif content.name == "ul":
-        value = content.decode_contents().strip()
-
-    # Add each section as a key-value pair to result dictionary 
-    result[key] = value
-
-  # Find all the li elements which contain each keyword
-  items = element.find_all("li")
-
-  # Create an empty list to store keywords
-  keywords = []
-
-  # Loop through each item element and extract the relevant information
-  for item in items:
-    # Get the text content of the item element
-    keyword = item.text.strip()
-
-    # Append it to keywords list 
-    keywords.append(keyword)
-    
-  # Add keywords to result dictionary 
-  result["keywords"] = keywords;
-
-  # Return result dictionary as a JSON string 
-  return result
-   
    
 def rate_job(job_description, plavras=False):
     
