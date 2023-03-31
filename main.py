@@ -176,8 +176,11 @@ def extractDescription(url):
     
     locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
     if locationDiv is not None:
-      location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
-      result["location"] = location
+      try:
+        location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
+        result["location"] = location
+      except:
+        result["location"] = None
     else:
       result["location"] = None
       
