@@ -188,7 +188,11 @@ def extractDescription(url):
     
     time.sleep(0.5)
     # Get the text content of the element
-    description = descriptionDiv.text.strip()
+    if descriptionDiv is not None:
+      description = descriptionDiv.text.strip()
+    else:
+      description = 'no description specified'
+      
     print('descr =*=*=*=*=*=*=>:  ')
 
     # Add the complete description to result dictionary 
