@@ -139,7 +139,8 @@ def extractJobs(url, plavras, page=1):
       job_data = executor.map(get_job_info, cards, repeat(plavras))
       
     job_data_list = list(job_data)
-    for job in job_data:
+    
+    for job in job_data_list:
       results.append(job)
         
   
