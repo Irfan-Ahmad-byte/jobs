@@ -40,7 +40,7 @@ class CustomerSearch(BaseModel):
 origins = [
     "http://localhost:8080",
     "https://irfan-ahmad.com",
-    'http://comomaquinasaprendem.xyz'
+    'https://comomaquinasaprendem.xyz'
 ]
 
 #from new_sendemail import send_email
