@@ -1,28 +1,34 @@
 # Import FastAPI and requests libraries
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+
+from pydantic import BaseModel
 from bs4 import BeautifulSoup
-from typing import Optional
+from typing import Optional, List
+
 from concurrent.futures import ThreadPoolExecutor
 from woocommerce import API
 from docsim import rate_text
 from itertools import repeat
+
 import os
 import requests
 import json
 import re
 import time
 import random
-
 import logging
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
 class JobsParams(BaseModel):
-    page: int
+    titles: List[str]
+    plavra: List[str]
+    time_period: str
+    location: str
 
 '''
 wcapi = API(
@@ -105,7 +111,21 @@ def get_job_info(card, plavras):
       }
     
     
-def extractJobs(url, plavras, page=1):
+def get_job_cards(url):
+    res = requests.get(url)
+    time.sleep(0.5)
+    html = res.text    
+
+    # Parse the HTML content using BeautifulSoup library (or any other method)
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Find all the elements with class name 'base-card' which contain each job listing
+    cards = soup.find('ul', class_="jobs-search__results-list").find_all('li')
+    
+    return cards
+
+
+def extractJobs(urls:list, plavras:list):
 
   logging.info('Getting jobs from %s', url)
 
@@ -114,35 +134,26 @@ def extractJobs(url, plavras, page=1):
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
-    res = requests.get(url)
-    time.sleep(1)
-    html = res.text    
-
-    # Parse the HTML content using BeautifulSoup library (or any other method)
-    soup = BeautifulSoup(html, "html.parser")
-
-    # Find all the elements with class name 'base-card' which contain each job listing
-    cards = soup.find('ul', class_="jobs-search__results-list").find_all('li')
+    with ThreadPoolExecutor(max_workers=10) as executor:
+      cards = executor.map(get_job_cards, urls)
+    
+    cards = list(cards)
+    cards = [card for card2 in cards for card in card2]
+    
     total_cards = len(cards)
-    
-    #  select cards to display on the selected page
-    start_index = (page*13)-13	# starting index of cards for current page
-    
-    cards = cards[start_index:page*13]
     
     print('Cards: =========', len(cards))
     
 
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=len(cards)) as executor:
       job_data = executor.map(get_job_info, cards, repeat(plavras))
       
     job_data_list = list(job_data)
     
     for job in job_data_list:
       results.append(job)
-        
   
   except Exception as e:
     logging.error('Error while getting jobs: %s', str(e))
@@ -251,46 +262,45 @@ def search_customer(id):
 	'location': location,
 	}
     
+def create_time_param(time):
+  
+  if time == "past 24 hours":
+    TPeriod = "&f_TPR=r86400"
+  
+  elif time == "past week":
+    TPeriod = "&f_TPR=r604800";
+  
+  elif time== "past month":
+    TPeriod = "&f_TPR=r2592000";
+  
+  elif time == "any time":
+      TPeriod = ""
+      
+  return 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/jobs")
-def get_jobs(request: Request):
+def get_jobs(user_params: JobsParams):
   
-#  id = params.id
-#  user = search_customer(id)
-  page = request.get('page')
-
-#  keywords = user['jobTitle'].replace(" ", "%20")
-#  keywords = user['jobTitle'].replace(",", "%2C")
-  keywords = 'Engenharia%20Ambiental'
-#  location = user['location'].replace(" ", "%20")
-#  location = user['location'].replace(",", "%2C")
-  location = 'Brazil'
-#  time_period = '&'+params.time_period if params.time_period else ''
-  time_period = '&f_TPR=r86400'
+  titles = user_params['titles']
+  plavra = user_params['plavra']
+  time_period = user_params['time_period']
+  location = user_params['location']
   
-#  plavra = user['plavras']
-  plavra = [
-  	'manter registros',
-	'projeto',
-	'arquivos',
-	'arquivos de programas',
-	'computador',
-	'registrar dados',
-	'avaliar',
-	'anomalias',
-	'revisar documentos',
-	'garantir',
-	'compartilhamento de tempo',
-	'levantar',
-	'rapidez',
-	'espanhol'
-	]
+  time_period = create_time_param(time_period)
+    
+#  user = search_customer(id) # using woocommerce
 
-  url = f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0"
+  location = user['location'].replace(" ", "%20").replace(",", "%2C")
 
-  print('REQUESTED URI: ', url)
-  return JSONResponse(content=extractJobs(url, plavra, 1))
+  urls = []
+  
+  for url in titles:
+    keywords = url.replace(" ", "%20").replace(",", "%2C")
+    urls.append(f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0")
+
+  print('REQUESTED URIs: ', urls)
+  return JSONResponse(content=extractJobs(urls, plavra))
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
@@ -317,7 +327,7 @@ if __name__ == "__main__":
 	'espanhol'
 	]
   try:
-    ress = extractJobs('https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0', plavra)
+    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0'], plavra)
 
     logging.info('Results: %s', len(ress[0]))
   except Exception as e:
