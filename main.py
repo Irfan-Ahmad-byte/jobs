@@ -126,13 +126,15 @@ def get_job_cards(url):
     # Find all the elements with class name 'base-card' which contain each job listing
     cards_ul = soup.find('ul', class_="jobs-search__results-list")
     
+    cards = []
+    
     if cards_ul:
         cards = cards_ul.find_all('li')
     else:
         try:
             cards = soup.find_all('li')
         except:
-            logging.info('Job cards not found for the URI: %s', url)
+            print('Job cards not found for the URI: %s', url)
     
     return cards
 
@@ -151,6 +153,9 @@ def extractJobs(urls:list, plavras:list):
     cards = [card for card2 in cards for card in card2]
     
     total_cards = len(cards)
+    
+    if len(cards) ==0:
+      return [results, 0]
     
     print('Cards: =========', len(cards))
     
