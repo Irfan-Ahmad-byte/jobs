@@ -23,8 +23,11 @@ def rate_text(plavra, text):
         # Add the score to the rating
         rating += score
 
-    # Normalize the rating by dividing it by the maximum possible score (length of plavra)
-    normalized_rating = rating / len(plavra)
+    # Calculate the maximum possible term frequency for the words in plavra within the text
+    max_term_frequency = sum(desc_tf[0, i] for i in range(len(features)))
+
+    # Normalize the rating by dividing it by the maximum term frequency
+    normalized_rating = rating / max_term_frequency if max_term_frequency != 0 else 0
 
     # Scale the rating to be between 0 and 5
     scaled_rating = normalized_rating * 5
