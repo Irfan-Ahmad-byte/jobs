@@ -296,7 +296,8 @@ def create_time_param(time):
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.post("/jobs")
 def get_jobs(user_params: JobsParams):
-  
+
+  user_params = user_params.dict()
   titles = user_params.titles
   plavra = user_params.plavra
   time_period = user_params.time_period
