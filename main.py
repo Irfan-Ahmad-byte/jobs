@@ -46,6 +46,7 @@ class CustomerSearch(BaseModel):
 origins = [
     "http://localhost:8080",
     "https://irfan-ahmad.com",
+    'http://comomaquinasaprendem.xyz',
     'https://comomaquinasaprendem.xyz'
 ]
 
@@ -112,22 +113,31 @@ def get_job_info(card, plavras):
     
     
 def get_job_cards(url):
+    
+    logging.info('Getting jobs from %s', url)
+    
     res = requests.get(url)
-    time.sleep(0.5)
+    time.sleep(1)
     html = res.text    
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
     soup = BeautifulSoup(html, "html.parser")
 
     # Find all the elements with class name 'base-card' which contain each job listing
-    cards = soup.find('ul', class_="jobs-search__results-list").find_all('li')
+    cards_ul = soup.find('ul', class_="jobs-search__results-list")
+    
+    if cards_ul:
+        cards = cards_ul.find_all('li')
+    else:
+        try:
+            cards = soup.find_all('li')
+        except:
+            logging.info('Job cards not found for the URI: %s', url)
     
     return cards
 
 
 def extractJobs(urls:list, plavras:list):
-
-  logging.info('Getting jobs from %s', url)
 
   # Create an empty list to store the results
   results = []
@@ -158,7 +168,7 @@ def extractJobs(urls:list, plavras:list):
   except Exception as e:
     logging.error('Error while getting jobs: %s', str(e))
 
-  logging.info('Finished getting jobs from %s', url)
+  logging.info('Finished getting jobs from %s', urls)
   # Return results list 
   return [results, total_cards]
   
@@ -327,7 +337,8 @@ if __name__ == "__main__":
 	'espanhol'
 	]
   try:
-    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0'], plavra)
+    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
+    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225'], plavra)
 
     logging.info('Results: %s', len(ress[0]))
   except Exception as e:
