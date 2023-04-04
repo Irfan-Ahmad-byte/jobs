@@ -291,22 +291,22 @@ def create_time_param(time):
   elif time == "any time":
       TPeriod = ""
       
-  return 
+  return TPeriod
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.post("/jobs")
 def get_jobs(user_params: JobsParams):
   
-  titles = user_params['titles']
-  plavra = user_params['plavra']
-  time_period = user_params['time_period']
-  location = user_params['location']
+  titles = user_params.titles
+  plavra = user_params.plavra
+  time_period = user_params.time_period
+  location = user_params.location
   
   time_period = create_time_param(time_period)
     
 #  user = search_customer(id) # using woocommerce
 
-  location = user['location'].replace(" ", "%20").replace(",", "%2C")
+  location = location.replace(" ", "%20").replace(",", "%2C")
 
   urls = []
   
