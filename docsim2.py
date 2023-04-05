@@ -9,8 +9,7 @@ Project Owner: Monica Piccinini (monicapiccinini12@gmail.com)
 
 
 
-from collections import Counter
-import re
+from sklearn.feature_extraction.text import CountVectorizer
 
 def rate_text(plavra, text):
     """
@@ -26,31 +25,30 @@ def rate_text(plavra, text):
     float: The rating score between 0 and 5, where 0 indicates no relevance and 5 indicates maximum relevance.
     """
     
-    # Convert the text to lowercase
-    text = text.lower()
+    # Create a CountVectorizer object
+    vectorizer = CountVectorizer()
 
-    # Tokenize the text by splitting it into words using regex
-    words = re.findall(r'\b\w+\b', text)
+    # Fit and transform the list of words and phrases and the description string into term frequency matrices
+    X = vectorizer.fit_transform(plavra + [text])
 
-    # Count the occurrences of words in the text
-    word_count = Counter(words)
+    # Get the feature names (words or phrases) from the vectorizer
+    features = vectorizer.get_feature_names_out()
 
-    # Calculate the total frequency of words in the text
-    total_frequency = sum(word_count.values())
+    # Get the term frequency matrix for the description string (the last row of X)
+    desc_tf = X[-1]
 
     # Initialize a variable to store the rating score
     rating = 0
 
     # Loop over the list of words and phrases
-    for word in plavra:
-        # Convert the word to lowercase
-        word = word.lower()
-
-        # Get the frequency for the word in the description string
-        score = word_count[word]
-
+    for i, word in enumerate(plavra):
+        # Get the term frequency for the word or phrase in the description string
+        score = desc_tf[0, i]
         # Add the score to the rating
         rating += score
+
+    # Calculate the total frequency of words in the text
+    total_frequency = sum(desc_tf[0, i] for i in range(len(features)))
 
     # Normalize the rating by dividing it by the total frequency of words in the text
     normalized_rating = rating / total_frequency if total_frequency != 0 else 0
