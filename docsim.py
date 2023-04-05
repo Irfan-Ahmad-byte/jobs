@@ -5,7 +5,7 @@ def rate_text(plavra, text):
     """
     Calculate a rating score for a given text based on the cumulative frequency of words in plavra within the text.
 
-    The rating is normalized by dividing it by the sum of cumulative frequencies of words in plavra, and then scaled between 0 and 5.
+    The rating is normalized by dividing it by the maximum possible cumulative frequency of words in plavra, and then scaled between 0 and 5.
 
     Parameters:
     plavra (list): A list of words or phrases to rate the input text.
@@ -27,11 +27,11 @@ def rate_text(plavra, text):
     # Calculate the cumulative frequency of words in plavra within the text
     cumulative_frequency = sum(word_count[word.lower()] for word in plavra)
 
-    # Calculate the sum of cumulative frequencies of words in plavra
-    sum_cumulative_frequencies = sum(word_count.values())
+    # Calculate the maximum possible cumulative frequency of words in plavra
+    max_cumulative_frequency = len(words)
 
-    # Normalize the rating by dividing it by the sum of cumulative frequencies of words in plavra
-    normalized_rating = cumulative_frequency / sum_cumulative_frequencies if sum_cumulative_frequencies != 0 else 0
+    # Normalize the rating by dividing it by the maximum possible cumulative frequency of words in plavra
+    normalized_rating = cumulative_frequency / max_cumulative_frequency if max_cumulative_frequency != 0 else 0
 
     # Scale the rating to be between 0 and 5
     scaled_rating = normalized_rating * 5
@@ -40,4 +40,5 @@ def rate_text(plavra, text):
     print(scaled_rating)
 
     return scaled_rating
+
 

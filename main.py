@@ -110,6 +110,10 @@ def get_job_info(card, plavras):
   # Get the text content and href attribute of the title link element
   jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
   jobURL = card.find("a")['href']
+  try:
+    location = card.find("span", class_='job-search-card__location').text.strip()
+  except:
+    location = 'location not given'
 
   jobDesc = extractDescription(jobURL)
       
@@ -119,7 +123,7 @@ def get_job_info(card, plavras):
   try:
     companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
   except:
-    companyName = False
+    companyName = 'Not specified'
 
   # Get the text content of the date span element
   try:
@@ -137,7 +141,7 @@ def get_job_info(card, plavras):
           "dayPosted": dayPosted,
            "jobURL": jobURL,
            'rating': rating,
-          'location': jobDesc['location'],
+          'location': location,
           'jobDesc': jobDesc['description']
       }
     
@@ -253,16 +257,6 @@ def extractDescription(url):
     
     # Find the element with class name 'description__text' which contains the job's description
     descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
-    
-    locationDiv = soup.find("h4", class_="top-card-layout__second-subline")
-    if locationDiv is not None:
-      try:
-        location = locationDiv.find_all("span", class_="topcard__flavor")[1].text.strip()
-        result["location"] = location
-      except:
-        result["location"] = None
-    else:
-      result["location"] = None
       
     # Call the parseDescription function on this element and get the result dictionary
     
@@ -308,7 +302,7 @@ def rate_job(job_description, plavras=False):
         
     rating = rate_text(plavras, job_description)
 
-    return round(rating, 2)
+    return round(rating)
 
 
    
