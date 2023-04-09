@@ -20,31 +20,21 @@ The module also defines the following FastAPI endpoints:
 
 
 
-# Import FastAPI and requests libraries
-from fastapi import FastAPI, Query, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-
-from pydantic import BaseModel
+# Import necessary libraries
 from bs4 import BeautifulSoup
+from pydantic import BaseModel
 from typing import Optional, List
-
 from concurrent.futures import ThreadPoolExecutor
-from woocommerce import API
 from docsim import rate_text
 from itertools import repeat
-
-import os
 import requests
 import json
 import re
 import time
 import random
-import logging
+import sys
 
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
 
 class JobsParams(BaseModel):
     titles: List[str]
@@ -116,8 +106,6 @@ def get_job_info(card, plavras):
     location = 'location not given'
 
   jobDesc = extractDescription(jobURL)
-      
-  print(jobTitle, ' ', jobURL, ' ', )
   
   # Get the text content of the company link element
   try:
@@ -157,7 +145,6 @@ def get_job_cards(url):
         List[bs4.element.Tag]: A list of job cards as BeautifulSoup objects.
     """
     
-    logging.info('Getting jobs from %s', url)
     
     res = requests.get(url)
     time.sleep(1)
@@ -177,7 +164,7 @@ def get_job_cards(url):
         try:
             cards = soup.find_all('li')
         except:
-            print('Job cards not found for the URI: %s', url)
+            ...
     
     return cards
 
@@ -210,7 +197,6 @@ def extractJobs(urls:list, plavras:list):
     if len(cards) ==0:
       return [results, 0]
     
-    print('Cards: =========', len(cards))
     
 
     # Loop through each card element and extract the relevant information
@@ -223,10 +209,9 @@ def extractJobs(urls:list, plavras:list):
     for job in job_data_list:
       results.append(job)
   
-  except Exception as e:
-    logging.error('Error while getting jobs: %s', str(e))
+  except:
+    ...
 
-  logging.info('Finished getting jobs from %s', urls)
   # Return results list 
   return [results, total_cards]
   
@@ -245,7 +230,6 @@ def extractDescription(url):
   result = {}
 
   # Fetch the HTML content from the URL using requests library (or any other method)
-  logging.info('Getting job description from %s', url)
   try:
     time.sleep(random.uniform(0.5, 3))
     res = requests.get(url)
@@ -267,15 +251,13 @@ def extractDescription(url):
     else:
       description = 'no description specified'
       
-    print('descr =*=*=*=*=*=*=>:  ')
 
     # Add the complete description to result dictionary 
     result["description"] = description
 
-  except Exception as e:
-    print('Error while getting job description: %s, %s', str(e), url)
+  except:
+    ...
 
-  print('Finished getting job description from %s', url)
 
   # Return result dictionary 
   return result
@@ -293,7 +275,6 @@ def rate_job(job_description, plavras=False):
         float: The rating score, rounded to 2 decimal places.
     """
     
-    print('Now rating jobs:/*/*/*/*/')
     rating = 0
 
     # Check if there are any plavras for the user
@@ -374,7 +355,6 @@ def create_time_param(time):
       
   return TPeriod
 
-
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.post("/jobs")
 def get_jobs(user_params: JobsParams):
@@ -406,35 +386,33 @@ def get_jobs(user_params: JobsParams):
     keywords = url.replace(" ", "%20").replace(",", "%2C")
     urls.append(f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0")
 
-  print('REQUESTED URIs: ', urls)
   return JSONResponse(content=extractJobs(urls, plavra))
 
 
   
+def main(user_params: JobsParams):
+    titles = user_params.titles
+    plavra = user_params.plavra
+    time_period = user_params.time_period
+    location = user_params.location
+
+    time_period = create_time_param(time_period)
+    location = location.replace(" ", "%20").replace(",", "%2C")
+
+    urls = []
+    for url in titles:
+        keywords = url.replace(" ", "%20").replace(",", "%2C")
+        urls.append(f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0")
+
+    return extractJobs(urls, plavra)
+
 if __name__ == "__main__":
-  plavra = [
-  	'manter registros',
-	'projeto',
-	'arquivos',
-	'arquivos de programas',
-	'computador',
-	'registrar dados',
-	'avaliar',
-	'anomalias',
-	'revisar documentos',
-	'garantir',
-	'compartilhamento de tempo',
-	'levantar',
-	'rapidez',
-	'espanhol'
-	]
-  try:
-    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
-    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225'], plavra)
-
-    logging.info('Results: %s', len(ress[0]))
-  except Exception as e:
-    logging.error('Error while running the application: %s', str(e))
-
-  logging.info('Finished running the application')
+    # Get the JSON string from the command line argument
+    json_params = sys.argv[1]
+    # Parse the JSON string into a JobsParams object
+    user_params = JobsParams.parse_raw(json_params)
+    # Call the main function with the parsed parameters
+    result = main(user_params)
+    # Convert the result to a JSON string and print it
+    print(json.dumps(result))
   

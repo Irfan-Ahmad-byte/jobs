@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+
+
 """
 This API module is designed to fetch, process, and rate job postings from LinkedIn. It uses FastAPI to provide an endpoint for getting jobs with specific titles, keywords, and location parameters. The API also utilizes the `rate_text` function from the `docsim.py` module to rate job postings based on the relevance of their descriptions to the provided keywords.
 
@@ -374,7 +377,6 @@ def create_time_param(time):
       
   return TPeriod
 
-
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.post("/jobs")
 def get_jobs(user_params: JobsParams):
@@ -412,29 +414,13 @@ def get_jobs(user_params: JobsParams):
 
   
 if __name__ == "__main__":
-  plavra = [
-  	'manter registros',
-	'projeto',
-	'arquivos',
-	'arquivos de programas',
-	'computador',
-	'registrar dados',
-	'avaliar',
-	'anomalias',
-	'revisar documentos',
-	'garantir',
-	'compartilhamento de tempo',
-	'levantar',
-	'rapidez',
-	'espanhol'
-	]
-  try:
-    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
-    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225'], plavra)
-
-    logging.info('Results: %s', len(ress[0]))
-  except Exception as e:
-    logging.error('Error while running the application: %s', str(e))
-
-  logging.info('Finished running the application')
+  rating = rate_text(['engineer'], 'We are looking for a software engineer.')[0]
+  print("Content-Type: text/html")
+  print()
+  print("<html><head><title>Test CGI</title></head>")
+  print("<body>")
+  print(f"<h1>The rating score is {rating}</h1>")
+  print("</body></html>")
+  
+  
   
