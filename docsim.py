@@ -1,4 +1,10 @@
 import re
+import unicodedata
+
+
+def normalize_text(text):
+    return unicodedata.normalize('NFC', text)
+    
 
 def rate_text(plavra, text):
     """
@@ -15,7 +21,7 @@ def rate_text(plavra, text):
     """
 
     # Convert the text to lowercase
-    text = text.lower()
+    text = normalize_text(text.lower())
 
     # Tokenize the text by splitting it into words using regex
     words = re.findall(r'\b\w+\b', text)
@@ -26,7 +32,7 @@ def rate_text(plavra, text):
         word_count[word] = word_count.get(word, 0) + 1
 
     # Calculate the number of times each plavra word appears in the text
-    plavra_text_count = [word_count.get(word.lower(), 0) for word in plavra]
+    plavra_text_count = [word_count.get(normalize_text(word.lower()), 0) for word in plavra]
 
     # Calculate the cumulative sum for all words in the plavra list
     sum_plavra_text_count = sum(plavra_text_count)
