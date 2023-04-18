@@ -1,21 +1,10 @@
-"""
-This module provides a function to calculate a rating score for a given text based on the occurrence of words or phrases
-in a list using Term Frequency (TF). The rating is normalized by dividing it by the maximum possible term frequency for
-the words in the list within the text and then scaled between 0 and 5.
-
-Developer: Irfan Ahmad (devirfan.mlka@gmail.com / https://irfan-ahmad.com)
-Project Owner: Monica Piccinini (monicapiccinini12@gmail.com)
-"""
-
-
-
-from sklearn.feature_extraction.text import CountVectorizer
+import re
 
 def rate_text(plavra, text):
     """
-    Calculate a rating score for a given text based on the occurrence of words or phrases in plavra using cumulative frequency.
+    Calculate a rating score for a given text based on the cumulative frequency of words in plavra within the text.
 
-    The rating is normalized by dividing it by the total frequency of words in the text, and then scaled between 0 and 5.
+    The rating is normalized by dividing it by the product of plavra_count and text_count, and then scaled between 0 and 5.
 
     Parameters:
     plavra (list): A list of words or phrases to rate the input text.
@@ -24,41 +13,46 @@ def rate_text(plavra, text):
     Returns:
     float: The rating score between 0 and 5, where 0 indicates no relevance and 5 indicates maximum relevance.
     """
+
+    # Convert the text to lowercase
+    text = text.lower()
+
+    # Tokenize the text by splitting it into words using regex
+    words = re.findall(r'\b\w+\b', text)
+
+    # Count the occurrences of words in the text
+    word_count = {}
+    for word in words:
+        word_count[word] = word_count.get(word, 0) + 1
+
+    # Calculate the number of times each plavra word appears in the text
+    plavra_text_count = {word:word_count.get(word.lower(), 0) for word in plavra}
+
+    # Calculate the cumulative sum for all words in the plavra list
+    sum_plavra_text_count = sum(plavra_text_count.values())
     
-    # Create a CountVectorizer object
-    vectorizer = CountVectorizer()
+    # restructure palavra such that each matched word of palavra is filled in palavra its total count in text
+    # for example if a palavra word 'melhor' has a plavra_text_count = 12 it means this word appeared 12 in the text
+    # so now refill this word 'melhor' 11 times again in the palavra list so that now the plavra list has 12 words of 'melhor'
+    # this way we'll calculate the ratio of matched words of text and palavra by dividing the sum of matched words by total
+    # words in palavra and multiplying with 100
+    
+    # for each word in text
+    for word in plavra_text_count:
+        # if that had a match in palavra
+        if plavra_text_count[word] > 0:
+            # add that word in the palavra one less the number of times it appeared in the text
+            plavra.extend([word]*(plavra_text_count[word]-1))
+    
 
-    # Fit and transform the list of words and phrases and the description string into term frequency matrices
-    X = vectorizer.fit_transform(plavra + [text])
+    # Calculate the number of words in the list plavra
+    plavra_count = len(plavra)
+    
+    # get the %age of words that matched in palavra and text
+    percentage_match = (sum_plavra_text_count/plavra_count)*100
 
-    # Get the feature names (words or phrases) from the vectorizer
-    features = vectorizer.get_feature_names_out()
+    # Print the values for plavra_count, text_count, plavra_text_count, and sum_plavra_text_count
+    #print(f"plavra_count: {plavra_count}, plavra_text_count: {plavra_text_count}, sum_plavra_text_count: {sum_plavra_text_count}, percentage match: {percentage_match}")
 
-    # Get the term frequency matrix for the description string (the last row of X)
-    desc_tf = X[-1]
-
-    # Initialize a variable to store the rating score
-    rating = 0
-
-    # Loop over the list of words and phrases
-    for i, word in enumerate(plavra):
-        # Get the term frequency for the word or phrase in the description string
-        score = desc_tf[0, i]
-        # Add the score to the rating
-        rating += score
-
-    # Calculate the total frequency of words in the text
-    total_frequency = sum(desc_tf[0, i] for i in range(len(features)))
-
-    # Normalize the rating by dividing it by the total frequency of words in the text
-    normalized_rating = rating / total_frequency if total_frequency != 0 else 0
-
-    # Scale the rating to be between 0 and 5
-    scaled_rating = normalized_rating * 5
-
-    # Print the scaled rating score
-    print(scaled_rating)
-
-    return scaled_rating
-
+    return percentage_match
 

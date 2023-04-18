@@ -29,11 +29,11 @@ from pydantic import BaseModel
 from bs4 import BeautifulSoup
 from typing import Optional, List
 
-from concurrent.futures import ThreadPoolExecutor
 from woocommerce import API
 from docsim import rate_text
 from itertools import repeat
 
+import concurrent.futures
 import os
 import requests
 import json
@@ -41,8 +41,11 @@ import re
 import time
 import random
 import logging
+import unicodedata
 
 
+
+headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
@@ -95,6 +98,10 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 LOCATION = 'Brazil'
 
 
+def normalize_text(text):
+    return unicodedata.normalize('NFC', text)
+    
+
 def get_job_info(card, plavras):
   """
     Extracts job information from a BeautifulSoup card object and a list of keywords (plavras).
@@ -106,7 +113,7 @@ def get_job_info(card, plavras):
     Returns:
         dict: A dictionary containing job title, company name, day posted, job URL, rating, location, and job description.
   """
-
+  
   # Get the text content and href attribute of the title link element
   jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
   jobURL = card.find("a")['href']
@@ -116,8 +123,6 @@ def get_job_info(card, plavras):
     location = 'location not given'
 
   jobDesc = extractDescription(jobURL)
-      
-  print(jobTitle, ' ', jobURL, ' ', )
   
   # Get the text content of the company link element
   try:
@@ -131,7 +136,7 @@ def get_job_info(card, plavras):
   except:
     dayPosted = False
     
-  rating = rate_job(jobDesc['description'], plavras)
+  rating = rate_job(normalize_text(jobDesc['description']), plavras)
         
 
       # Create a dictionary with all these information and append it to results list 
@@ -142,10 +147,10 @@ def get_job_info(card, plavras):
            "jobURL": jobURL,
            'rating': rating,
           'location': location,
-          'jobDesc': jobDesc['description']
+          'jobDesc': normalize_text(jobDesc['description'])
       }
     
-    
+
 def get_job_cards(url):
     """
     Fetches the HTML content from a LinkedIn jobs search URL and returns a list of job cards as BeautifulSoup objects.
@@ -159,7 +164,7 @@ def get_job_cards(url):
     
     logging.info('Getting jobs from %s', url)
     
-    res = requests.get(url)
+    res = requests.get(url, headers=headers)
     time.sleep(1)
     html = res.text    
 
@@ -177,11 +182,17 @@ def get_job_cards(url):
         try:
             cards = soup.find_all('li')
         except:
-            print('Job cards not found for the URI: %s', url)
+            ...
     
     return cards
 
 
+def pool_processor(function, *args):
+    with ThreadPoolExecutor(max_workers=len(list(args)[0])/2) as executor:
+        response = list(executor.map(function, *args))
+    return response
+    
+    
 def extractJobs(urls:list, plavras:list):
   """
     Extracts job information from a list of LinkedIn job search URLs and a list of keywords (plavras).
@@ -193,32 +204,46 @@ def extractJobs(urls:list, plavras:list):
     Returns:
         Tuple[List[dict], int]: A tuple containing a list of job dictionaries and the total number of cards.
   """
+  print('===========================')
+  print(plavras)
+  plavras = normalize_text(' '.join(plavras)).split(' ')
+  print('***********')
+  print(plavras)
+  print('===========================')
 
   # Create an empty list to store the results
   results = []
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
-    with ThreadPoolExecutor(max_workers=10) as executor:
-      cards = executor.map(get_job_cards, urls)
+    #with ThreadPoolExecutor(max_workers=10) as executor:
+     # cards = executor.map(get_job_cards, urls)
+      
+    cards = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(urls)) as executor:
+      card_futures = [executor.submit(get_job_cards, url) for url in urls]
+      for future in concurrent.futures.as_completed(card_futures):
+        cards.extend(future.result())
     
-    cards = list(cards)
-    cards = [card for card2 in cards for card in card2]
+    #cards = pool_processor(get_job_cards, urls)
+    #cards = [card for sublist in cards for card in sublist]
     
     total_cards = len(cards)
     
     if len(cards) ==0:
       return [results, 0]
     
-    print('Cards: =========', len(cards))
     
 
     # Loop through each card element and extract the relevant information
-    #results = [get_job_info(card, plavras) for card in cards]
-    with ThreadPoolExecutor(max_workers=len(cards)) as executor:
-      job_data = executor.map(get_job_info, cards, repeat(plavras))
-      
-    job_data_list = list(job_data)
+    job_data_list = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+      job_futures = [executor.submit(get_job_info, card, plavras) for card in cards]
+      for future in concurrent.futures.as_completed(job_futures):
+        job_data_list.append(future.result())
+        
+    #with ThreadPoolExecutor(max_workers=10) as executor:
+     # job_data_list = executor.map(get_job_info, cards, repeat(plavras))
     
     for job in job_data_list:
       results.append(job)
@@ -226,9 +251,10 @@ def extractJobs(urls:list, plavras:list):
   except Exception as e:
     logging.error('Error while getting jobs: %s', str(e))
 
-  logging.info('Finished getting jobs from %s', urls)
+  #logging.info('Finished getting jobs from %s', urls)
   # Return results list 
   return [results, total_cards]
+  
   
 def extractDescription(url):
   """
@@ -245,11 +271,11 @@ def extractDescription(url):
   result = {}
 
   # Fetch the HTML content from the URL using requests library (or any other method)
-  logging.info('Getting job description from %s', url)
+  #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(0.5, 3))
-    res = requests.get(url)
-    time.sleep(random.uniform(0.5, 3))
+    time.sleep(random.uniform(2, 5))
+    res = requests.get(url, headers=headers)
+    time.sleep(random.uniform(2, 5))
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -266,8 +292,7 @@ def extractDescription(url):
       description = descriptionDiv.text.strip()
     else:
       description = 'no description specified'
-      
-    print('descr =*=*=*=*=*=*=>:  ')
+    
 
     # Add the complete description to result dictionary 
     result["description"] = description
@@ -275,7 +300,7 @@ def extractDescription(url):
   except Exception as e:
     print('Error while getting job description: %s, %s', str(e), url)
 
-  print('Finished getting job description from %s', url)
+  #print('Finished getting job description from %s', url)
 
   # Return result dictionary 
   return result
@@ -293,7 +318,7 @@ def rate_job(job_description, plavras=False):
         float: The rating score, rounded to 2 decimal places.
     """
     
-    print('Now rating jobs:/*/*/*/*/')
+    #print('Now rating jobs:/*/*/*/*/')
     rating = 0
 
     # Check if there are any plavras for the user
@@ -302,7 +327,7 @@ def rate_job(job_description, plavras=False):
         
     rating = rate_text(plavras, job_description)
 
-    return round(rating)
+    return round(rating, 4)
 
 
    
@@ -453,12 +478,16 @@ if __name__ == "__main__":
 	'espanhol'
 	]
   try:
-    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
-    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225'], plavra)
+    start_time = time.time()
 
-    logging.info('Results: %s', len(ress[0]))
+    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
+    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225&location=Brazil'], plavra)
+    
+    elapsed_time = time.time() - start_time
+    
+    for res in ress[0]:
+      print(res['rating'])
+    print(f"Time taken to extract job description: {elapsed_time:.2f} seconds")
   except Exception as e:
     logging.error('Error while running the application: %s', str(e))
-
-  logging.info('Finished running the application')
   
