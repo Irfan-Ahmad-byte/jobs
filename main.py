@@ -185,12 +185,6 @@ def get_job_cards(url):
             ...
     
     return cards
-
-
-def pool_processor(function, *args):
-    with ThreadPoolExecutor(max_workers=len(list(args)[0])/2) as executor:
-        response = list(executor.map(function, *args))
-    return response
     
     
 def extractJobs(urls:list, plavras:list):
@@ -204,7 +198,8 @@ def extractJobs(urls:list, plavras:list):
     Returns:
         Tuple[List[dict], int]: A tuple containing a list of job dictionaries and the total number of cards.
   """
-
+  
+  plavras = normalize_text(' '.join(plavras)).split(' ')
 
   # Create an empty list to store the results
   results = []
@@ -268,7 +263,7 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(3, 6))
+    time.sleep(random.uniform(2, 5))
     res = requests.get(url, headers=headers, timeout=3)
     time.sleep(random.uniform(2, 5))
     html = res.text
