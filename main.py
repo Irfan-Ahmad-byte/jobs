@@ -44,7 +44,7 @@ import logging
 import unicodedata
 
 
-
+requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -204,12 +204,7 @@ def extractJobs(urls:list, plavras:list):
     Returns:
         Tuple[List[dict], int]: A tuple containing a list of job dictionaries and the total number of cards.
   """
-  print('===========================')
-  print(plavras)
-  plavras = normalize_text(' '.join(plavras)).split(' ')
-  print('***********')
-  print(plavras)
-  print('===========================')
+
 
   # Create an empty list to store the results
   results = []
@@ -273,8 +268,8 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(2, 5))
-    res = requests.get(url, headers=headers)
+    time.sleep(random.uniform(4, 7))
+    res = requests.get(url, headers=headers, timeout=3)
     time.sleep(random.uniform(2, 5))
     html = res.text
 
