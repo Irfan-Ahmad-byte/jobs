@@ -27,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
 from bs4 import BeautifulSoup
-from typing import Optional, List, Union
+from typing import Optional, List
 
 from woocommerce import API
 from docsim import rate_text
@@ -45,6 +45,12 @@ import logging
 import unicodedata
 
 
+# Import additional libraries for SSE
+import asyncio
+from sse_starlette.sse import EventSourceResponse
+from starlette.concurrency import run_until_first_complete
+
+
 requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 # Set up logging
@@ -52,7 +58,7 @@ logging.basicConfig(level=logging.INFO)
 
 class JobsParams(BaseModel):
     titles: List[str]
-    plavra: Union[List[str], bool]
+    plavra: List[str]
     time_period: str
     location: str
 
@@ -436,6 +442,46 @@ def display_jobs():
   }
 
   return JSONResponse(content=ress)
+  
+  
+# Create a new function for SSE response
+async def job_results_stream(url_list: List[str], plavra_list: List[str], send):
+    search_results, total_cards = extractJobs(url_list, plavra_list)
+    search_results = jsonable_encoder(search_results)
+    for result in search_results:
+        await send(json.dumps(result))
+        await asyncio.sleep(0.5)
+        
+        
+async def sse_endpoint(url_list: List[str], plavra_list: List[str]):
+    async def event_stream():
+        nonlocal url_list
+        nonlocal plavra_list
+        while True:
+            yield await run_until_first_complete(
+                (job_results_stream, {"url_list": url_list, "plavra_list": plavra_list})
+            )
+
+    return EventSourceResponse(event_stream())
+
+@app.post("/jobs_sse")
+async def get_jobs_sse(user_params: JobsParams):
+    titles = user_params.titles
+    plavra = user_params.plavra
+    time_period = user_params.time_period
+    location = user_params.location
+
+    time_period = create_time_param(time_period)
+    location = location.replace(" ", "%20").replace(",", "%2C")
+
+    urls = []
+    for url in titles:
+        keywords = url.replace(" ", "%20").replace(",", "%2C")
+        urls.append(f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0")
+
+    return await sse_endpoint(urls, plavra)
+    
+    
   
 if __name__ == "__main__":
   plavra = [
