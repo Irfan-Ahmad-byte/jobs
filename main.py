@@ -70,10 +70,6 @@ class CustomerSearch(BaseModel):
     id: int
 
 origins = [
-    "http://localhost:8080",
-    "https://irfan-ahmad.com",
-    'http://comomaquinasaprendem.xyz',
-    'https://comomaquinasaprendem.xyz',
     '*'
 ]
 
