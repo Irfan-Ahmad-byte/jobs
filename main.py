@@ -100,7 +100,7 @@ def normalize_text(text):
     return unicodedata.normalize('NFC', text)
     
 
-def get_job_info(card):
+def get_job_info(card, plavras):
   """
     Extracts job information from a BeautifulSoup card object and a list of keywords (plavras).
     
@@ -134,7 +134,8 @@ def get_job_info(card):
   except:
     dayPosted = False
     
-  #rating = rate_job(normalize_text(jobDesc['description']), plavras)
+  jobDesc = extractDescription(jobURL)
+  rating = rate_job(normalize_text(jobDesc['description']), plavras)
         
 
       # Create a dictionary with all these information and append it to results list 
@@ -143,7 +144,9 @@ def get_job_info(card):
           "companyName": companyName,
           "dayPosted": dayPosted,
            "jobURL": jobURL,
-          'location': location
+          'location': location,
+          'jobDesc': jobDesc['description'],
+          'rating': rating
       }
     
 
@@ -218,19 +221,10 @@ def extractJobs(urls:list, plavras:list):
     
     if len(cards) ==0:
       return [results, 0]
-    
-    
 
     # Loop through each card element and extract the relevant information
-    job_data_list = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(cards)) as executor:
-      job_futures = [executor.submit(get_job_info, card) for card in cards]
-      for future in concurrent.futures.as_completed(job_futures):
-        job_data_list.append(future.result())
-    
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=sqrt(len(job_data_list))) as executor:
-      job_futures = [executor.submit(extractDescription, jcard, plavras) for jcard in job_data_list]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
+      job_futures = [executor.submit(get_job_info, card, plavras) for card in cards]
       for future in concurrent.futures.as_completed(job_futures):
         results.append(future.result())
         
@@ -241,14 +235,14 @@ def extractJobs(urls:list, plavras:list):
      # results.append(job)
   
   except Exception as e:
-    logging.error('Error while getting jobs: %s', str(e))
+    print(e)
 
   #logging.info('Finished getting jobs from %s', urls)
   # Return results list 
   return [results, total_cards]
   
   
-def extractDescription(job, palavra):
+def extractDescription(url):
   """
     Extracts job description and location from a LinkedIn job posting URL.
     
@@ -259,7 +253,7 @@ def extractDescription(job, palavra):
         dict: A dictionary containing the job description and location.
   """
   
-  url = job['jobURL']
+  results = {}
   # Create an empty dictionary to store the result
 
   # Fetch the HTML content from the URL using requests library (or any other method)
@@ -286,8 +280,7 @@ def extractDescription(job, palavra):
     
 
     # Add the complete description to result dictionary 
-    job['jobURL'] = normalize_text(description)
-    job['rating'] = rate_job(description, palavra)
+    results['description'] = normalize_text(description)
 
   except Exception as e:
     print('Error while getting job description: %s, %s', str(e), url)
@@ -295,7 +288,7 @@ def extractDescription(job, palavra):
   #print('Finished getting job description from %s', url)
 
   # Return result dictionary 
-  return job
+  return results
 
    
 def rate_job(job_description, plavras=False):
