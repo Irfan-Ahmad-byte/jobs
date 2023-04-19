@@ -111,7 +111,7 @@ def get_job_info(card, plavras):
     Returns:
         dict: A dictionary containing job title, company name, day posted, job URL, rating, location, and job description.
   """
-  
+
   # Get the text content and href attribute of the title link element
   jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
   jobURL = card.find("a")['href']
@@ -120,7 +120,7 @@ def get_job_info(card, plavras):
   except:
     location = 'location not given'
 
-  #jobDesc = extractDescription(jobURL)
+  jobDesc = extractDescription(jobURL)
   
   # Get the text content of the company link element
   try:
@@ -134,7 +134,6 @@ def get_job_info(card, plavras):
   except:
     dayPosted = False
     
-  jobDesc = extractDescription(jobURL)
   rating = rate_job(normalize_text(jobDesc['description']), plavras)
         
 
@@ -144,12 +143,12 @@ def get_job_info(card, plavras):
           "companyName": companyName,
           "dayPosted": dayPosted,
            "jobURL": jobURL,
+           'rating': rating,
           'location': location,
-          'jobDesc': jobDesc['description'],
-          'rating': rating
+          'jobDesc': jobDesc['description']
       }
     
-
+    
 def get_job_cards(url):
     """
     Fetches the HTML content from a LinkedIn jobs search URL and returns a list of job cards as BeautifulSoup objects.
@@ -161,9 +160,8 @@ def get_job_cards(url):
         List[bs4.element.Tag]: A list of job cards as BeautifulSoup objects.
     """
     
-    logging.info('Getting jobs from %s', url)
     
-    res = requests.get(url, headers=headers)
+    res = requests.get(url)
     time.sleep(1)
     html = res.text    
 
@@ -184,8 +182,8 @@ def get_job_cards(url):
             ...
     
     return cards
-    
-    
+
+
 def extractJobs(urls:list, plavras:list):
   """
     Extracts job information from a list of LinkedIn job search URLs and a list of keywords (plavras).
@@ -197,42 +195,38 @@ def extractJobs(urls:list, plavras:list):
     Returns:
         Tuple[List[dict], int]: A tuple containing a list of job dictionaries and the total number of cards.
   """
-  
   plavras = normalize_text(' '.join(plavras)).split(' ')
-
   # Create an empty list to store the results
   results = []
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
-    #with ThreadPoolExecutor(max_workers=10) as executor:
-     # cards = executor.map(get_job_cards, urls)
-      
-    cards = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(urls)) as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor:
       cards = executor.map(get_job_cards, urls)
     
-    #cards = pool_processor(get_job_cards, urls)
-    cards = [card for sublist in cards for card in sublist]
+    cards = list(cards)
+    cards = [card for card2 in cards for card in card2]
     
     total_cards = len(cards)
     
     if len(cards) ==0:
       return [results, 0]
+    
+    
 
     # Loop through each card element and extract the relevant information
-        
-    job_data_list = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
-      job_data_list = executor.map(get_job_info, cards, repeat(plavras))
+    #results = [get_job_info(card, plavras) for card in cards]
+    with ThreadPoolExecutor(max_workers=len(cards)) as executor:
+      job_data = executor.map(get_job_info, cards, repeat(plavras))
+      
+    job_data_list = list(job_data)
     
     for job in job_data_list:
       results.append(job)
   
-  except Exception as e:
-    print(e)
+  except:
+    ...
 
-  #logging.info('Finished getting jobs from %s', urls)
   # Return results list 
   return [results, total_cards]
   
