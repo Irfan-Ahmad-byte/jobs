@@ -133,9 +133,7 @@ def get_job_info(card, plavras):
     
   rating = rate_job(normalize_text(jobDesc), plavras)
         
-
-      # Create a dictionary with all these information and append it to results list 
-  return {
+  job = {
           "jobTitle": jobTitle,
           "companyName": companyName,
           "dayPosted": dayPosted,
@@ -144,6 +142,10 @@ def get_job_info(card, plavras):
           'location': location,
           'jobDesc': jobDesc
       }
+      
+  print('JOB: ', job)
+      # Create a dictionary with all these information and append it to results list 
+  return job
     
     
 def get_job_cards(url):
