@@ -434,25 +434,10 @@ def get_jobs(user_params: JobsParams):
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/")
 def display_jobs():
-  plavra = [
-  	'manter registros',
-	'projeto',
-	'arquivos',
-	'arquivos de programas',
-	'computador',
-	'registrar dados',
-	'avaliar',
-	'anomalias',
-	'revisar documentos',
-	'garantir',
-	'compartilhamento de tempo',
-	'levantar',
-	'rapidez',
-	'espanhol'
-	]
-	
-  ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
-    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225'], plavra)
+  
+  ress = {
+      'Hello World': 'Hello World, welcome to Jobs API.'
+  }
 
   return JSONResponse(content=ress)
   
