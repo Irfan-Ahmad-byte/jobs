@@ -201,7 +201,7 @@ def extractJobs(urls:list, plavras:list):
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
       cards = executor.map(get_job_cards, urls)
     
     cards = list(cards)
@@ -216,7 +216,7 @@ def extractJobs(urls:list, plavras:list):
 
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
-    with ThreadPoolExecutor(max_workers=len(cards)) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(cards)) as executor:
       job_data = executor.map(get_job_info, cards, repeat(plavras))
       
     job_data_list = list(job_data)
