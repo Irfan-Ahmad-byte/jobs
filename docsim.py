@@ -19,6 +19,9 @@ def rate_text(plavra, text):
     Returns:
     float: The rating score between 0 and 5, where 0 indicates no relevance and 5 indicates maximum relevance.
     """
+    
+    
+    plavra = normalize_text(' '.join(plavra)).split(' ')
 
     # Convert the text to lowercase
     text = normalize_text(text.lower())
