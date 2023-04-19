@@ -27,13 +27,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
 from bs4 import BeautifulSoup
-from typing import Optional, List
+from typing import Optional, List, Union
+
+from woocommerce import API
+from docsim import rate_text, normalize_text
+from itertools import repeat
+from math import sqrt
 
 from concurrent.futures import ThreadPoolExecutor
-from woocommerce import API
-from docsim import rate_text
-from itertools import repeat
-
 import os
 import requests
 import json
@@ -41,14 +42,17 @@ import re
 import time
 import random
 import logging
+import unicodedata
 
 
+requests.adapters.DEFAULT_RETRIES = 3
+headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
 class JobsParams(BaseModel):
     titles: List[str]
-    plavra: List[str]
+    plavra: Union[List[str], bool]
     time_period: str
     location: str
 
@@ -66,10 +70,7 @@ class CustomerSearch(BaseModel):
     id: int
 
 origins = [
-    "http://localhost:8080",
-    "https://irfan-ahmad.com",
-    'http://comomaquinasaprendem.xyz',
-    'https://comomaquinasaprendem.xyz'
+    '*'
 ]
 
 #from new_sendemail import send_email
@@ -94,6 +95,7 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 LOCATION = 'Brazil'
 
+    
 
 def get_job_info(card, plavras):
   """
@@ -116,8 +118,6 @@ def get_job_info(card, plavras):
     location = 'location not given'
 
   jobDesc = extractDescription(jobURL)
-      
-  print(jobTitle, ' ', jobURL, ' ', )
   
   # Get the text content of the company link element
   try:
@@ -131,19 +131,21 @@ def get_job_info(card, plavras):
   except:
     dayPosted = False
     
-  rating = rate_job(jobDesc['description'], plavras)
+  rating = rate_job(normalize_text(jobDesc), plavras)
         
-
-      # Create a dictionary with all these information and append it to results list 
-  return {
+  job = {
           "jobTitle": jobTitle,
           "companyName": companyName,
           "dayPosted": dayPosted,
            "jobURL": jobURL,
            'rating': rating,
           'location': location,
-          'jobDesc': jobDesc['description']
+          'jobDesc': jobDesc
       }
+      
+  print('JOB: ', job)
+      # Create a dictionary with all these information and append it to results list 
+  return job
     
     
 def get_job_cards(url):
@@ -157,7 +159,6 @@ def get_job_cards(url):
         List[bs4.element.Tag]: A list of job cards as BeautifulSoup objects.
     """
     
-    logging.info('Getting jobs from %s', url)
     
     res = requests.get(url)
     time.sleep(1)
@@ -177,7 +178,7 @@ def get_job_cards(url):
         try:
             cards = soup.find_all('li')
         except:
-            print('Job cards not found for the URI: %s', url)
+            ...
     
     return cards
 
@@ -193,7 +194,7 @@ def extractJobs(urls:list, plavras:list):
     Returns:
         Tuple[List[dict], int]: A tuple containing a list of job dictionaries and the total number of cards.
   """
-
+  plavras = normalize_text(' '.join(plavras)).split(' ')
   # Create an empty list to store the results
   results = []
 
@@ -210,25 +211,28 @@ def extractJobs(urls:list, plavras:list):
     if len(cards) ==0:
       return [results, 0]
     
-    print('Cards: =========', len(cards))
     
 
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
-    with ThreadPoolExecutor(max_workers=len(cards)) as executor:
-      job_data = executor.map(get_job_info, cards, repeat(plavras))
+    for card in cards:
+      results.append(get_job_info(card, plavras))
+    #with ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
+     # job_data = executor.map(get_job_info, cards, repeat(plavras))
       
-    job_data_list = list(job_data)
+    #job_data_list = list(job_data)
     
-    for job in job_data_list:
-      results.append(job)
+    #for job in job_data_list:
+     # results.append(job)
+      
+    print(results)
   
-  except Exception as e:
-    logging.error('Error while getting jobs: %s', str(e))
+  except:
+    ...
 
-  logging.info('Finished getting jobs from %s', urls)
   # Return results list 
   return [results, total_cards]
+  
   
 def extractDescription(url):
   """
@@ -240,16 +244,15 @@ def extractDescription(url):
     Returns:
         dict: A dictionary containing the job description and location.
   """
-
+  
+  description = False
   # Create an empty dictionary to store the result
-  result = {}
 
   # Fetch the HTML content from the URL using requests library (or any other method)
-  logging.info('Getting job description from %s', url)
+  #logging.info('Getting job description from %s', url)
   try:
     time.sleep(random.uniform(0.5, 3))
-    res = requests.get(url)
-    time.sleep(random.uniform(0.5, 3))
+    res = requests.get(url, headers=headers, timeout=3)
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -266,19 +269,18 @@ def extractDescription(url):
       description = descriptionDiv.text.strip()
     else:
       description = 'no description specified'
-      
-    print('descr =*=*=*=*=*=*=>:  ')
+    
 
     # Add the complete description to result dictionary 
-    result["description"] = description
+    description = normalize_text(description)
 
   except Exception as e:
     print('Error while getting job description: %s, %s', str(e), url)
 
-  print('Finished getting job description from %s', url)
+  #print('Finished getting job description from %s', url)
 
   # Return result dictionary 
-  return result
+  return description
 
    
 def rate_job(job_description, plavras=False):
@@ -293,7 +295,7 @@ def rate_job(job_description, plavras=False):
         float: The rating score, rounded to 2 decimal places.
     """
     
-    print('Now rating jobs:/*/*/*/*/')
+    #print('Now rating jobs:/*/*/*/*/')
     rating = 0
 
     # Check if there are any plavras for the user
@@ -302,7 +304,7 @@ def rate_job(job_description, plavras=False):
         
     rating = rate_text(plavras, job_description)
 
-    return round(rating)
+    return round(rating, 4)
 
 
    
@@ -413,27 +415,12 @@ def get_jobs(user_params: JobsParams):
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/")
 def display_jobs():
-  plavra = [
-  	'manter registros',
-	'projeto',
-	'arquivos',
-	'arquivos de programas',
-	'computador',
-	'registrar dados',
-	'avaliar',
-	'anomalias',
-	'revisar documentos',
-	'garantir',
-	'compartilhamento de tempo',
-	'levantar',
-	'rapidez',
-	'espanhol'
-	]
-	
-  ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
-    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225'], plavra)
+  
+  ress = {
+      'Hello World': 'Hello World, welcome to Jobs API.'
+  }
 
-  return JSONResponse(content=extractJobs(urls, plavra))
+  return JSONResponse(content=ress)
   
 if __name__ == "__main__":
   plavra = [
@@ -453,12 +440,16 @@ if __name__ == "__main__":
 	'espanhol'
 	]
   try:
-    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
-    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225'], plavra)
+    start_time = time.time()
 
-    logging.info('Results: %s', len(ress[0]))
+    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
+    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225&location=Brazil'], plavra)
+    
+    elapsed_time = time.time() - start_time
+    
+    for res in ress[0]:
+      print(res['rating'])
+    print(f"Time taken to extract job description: {elapsed_time:.2f} seconds")
   except Exception as e:
     logging.error('Error while running the application: %s', str(e))
-
-  logging.info('Finished running the application')
   
