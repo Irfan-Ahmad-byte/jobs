@@ -215,24 +215,23 @@ def extractJobs(urls:list, plavras:list):
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
     results = []
-    for card in cards:
-      results.append(get_job_info(card, plavras))
-    #with ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
-     # job_data = executor.map(get_job_info, cards, repeat(plavras))
-      
-    #job_data_list = list(job_data)
     
-    #for job in job_data_list:
-     # results.append(job)
+    with ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
+      job_data = executor.map(get_job_info, cards, repeat(plavras))
+      
+    job_data_list = list(job_data)
+    
+    for job in job_data_list:
+      results.append(job)
       
     print(results)
     return [results, total_cards]
   
-  except:
-    ...
+  except Exception as e:
+    print(e)
+    return [[], 0]
 
   # Return results list 
-    return [[], 0]
   
   
 def extractDescription(url):
