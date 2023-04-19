@@ -30,7 +30,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from docsim import rate_text
+from docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -95,9 +95,6 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 LOCATION = 'Brazil'
 
-
-def normalize_text(text):
-    return unicodedata.normalize('NFC', text)
     
 
 def get_job_info(card, plavras):
