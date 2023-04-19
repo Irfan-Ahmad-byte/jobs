@@ -32,6 +32,7 @@ from typing import Optional, List
 from woocommerce import API
 from docsim import rate_text
 from itertools import repeat
+from math import sqrt
 
 import concurrent.futures
 import os
@@ -102,7 +103,7 @@ def normalize_text(text):
     return unicodedata.normalize('NFC', text)
     
 
-def get_job_info(card, plavras):
+def get_job_info(card):
   """
     Extracts job information from a BeautifulSoup card object and a list of keywords (plavras).
     
@@ -122,7 +123,7 @@ def get_job_info(card, plavras):
   except:
     location = 'location not given'
 
-  jobDesc = extractDescription(jobURL)
+  #jobDesc = extractDescription(jobURL)
   
   # Get the text content of the company link element
   try:
@@ -136,7 +137,7 @@ def get_job_info(card, plavras):
   except:
     dayPosted = False
     
-  rating = rate_job(normalize_text(jobDesc['description']), plavras)
+  #rating = rate_job(normalize_text(jobDesc['description']), plavras)
         
 
       # Create a dictionary with all these information and append it to results list 
@@ -145,9 +146,7 @@ def get_job_info(card, plavras):
           "companyName": companyName,
           "dayPosted": dayPosted,
            "jobURL": jobURL,
-           'rating': rating,
-          'location': location,
-          'jobDesc': normalize_text(jobDesc['description'])
+          'location': location
       }
     
 
@@ -227,16 +226,22 @@ def extractJobs(urls:list, plavras:list):
 
     # Loop through each card element and extract the relevant information
     job_data_list = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-      job_futures = [executor.submit(get_job_info, card, plavras) for card in cards]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(cards)) as executor:
+      job_futures = [executor.submit(get_job_info, card) for card in cards]
       for future in concurrent.futures.as_completed(job_futures):
         job_data_list.append(future.result())
+    
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=sqrt(len(job_data_list))) as executor:
+      job_futures = [executor.submit(extractDescription, jcard, plavras) for jcard in job_data_list]
+      for future in concurrent.futures.as_completed(job_futures):
+        results.append(future.result())
         
     #with ThreadPoolExecutor(max_workers=10) as executor:
      # job_data_list = executor.map(get_job_info, cards, repeat(plavras))
     
-    for job in job_data_list:
-      results.append(job)
+    #for job in job_data_list:
+     # results.append(job)
   
   except Exception as e:
     logging.error('Error while getting jobs: %s', str(e))
@@ -246,7 +251,7 @@ def extractJobs(urls:list, plavras:list):
   return [results, total_cards]
   
   
-def extractDescription(url):
+def extractDescription(job, palavra):
   """
     Extracts job description and location from a LinkedIn job posting URL.
     
@@ -256,16 +261,15 @@ def extractDescription(url):
     Returns:
         dict: A dictionary containing the job description and location.
   """
-
+  
+  url = job['jobURL']
   # Create an empty dictionary to store the result
-  result = {}
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(2, 5))
+    time.sleep(random.uniform(2, 10))
     res = requests.get(url, headers=headers, timeout=3)
-    time.sleep(random.uniform(2, 5))
     html = res.text
 
     # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -285,7 +289,8 @@ def extractDescription(url):
     
 
     # Add the complete description to result dictionary 
-    result["description"] = description
+    job['jobURL'] = normalize_text(description)
+    job['rating'] = rate_job(description, palavra)
 
   except Exception as e:
     print('Error while getting job description: %s, %s', str(e), url)
@@ -293,7 +298,7 @@ def extractDescription(url):
   #print('Finished getting job description from %s', url)
 
   # Return result dictionary 
-  return result
+  return job
 
    
 def rate_job(job_description, plavras=False):
