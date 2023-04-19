@@ -134,7 +134,7 @@ def get_job_info(card, plavras):
   except:
     dayPosted = False
     
-  rating = rate_job(normalize_text(jobDesc['description']), plavras)
+  rating = rate_job(normalize_text(jobDesc), plavras)
         
 
       # Create a dictionary with all these information and append it to results list 
@@ -145,7 +145,7 @@ def get_job_info(card, plavras):
            "jobURL": jobURL,
            'rating': rating,
           'location': location,
-          'jobDesc': jobDesc['description']
+          'jobDesc': jobDesc
       }
     
     
@@ -244,7 +244,7 @@ def extractDescription(url):
         dict: A dictionary containing the job description and location.
   """
   
-  results = {}
+  description = False
   # Create an empty dictionary to store the result
 
   # Fetch the HTML content from the URL using requests library (or any other method)
@@ -271,7 +271,7 @@ def extractDescription(url):
     
 
     # Add the complete description to result dictionary 
-    results['description'] = normalize_text(description)
+    description = normalize_text(description)
 
   except Exception as e:
     print('Error while getting job description: %s, %s', str(e), url)
@@ -279,7 +279,7 @@ def extractDescription(url):
   #print('Finished getting job description from %s', url)
 
   # Return result dictionary 
-  return results
+  return description
 
    
 def rate_job(job_description, plavras=False):
