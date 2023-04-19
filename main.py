@@ -218,6 +218,8 @@ def extractJobs(urls:list, plavras:list):
     #results = [get_job_info(card, plavras) for card in cards]
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(cards)) as executor:
       results = [*executor.map(get_job_info, cards, repeat(plavras))]
+      
+    print(results)
   
   except:
     ...
