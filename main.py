@@ -186,7 +186,7 @@ def get_job_cards(url):
     return cards
     
     
-async def extractJobs(urls:list, plavras:list):
+def extractJobs(urls:list, plavras:list):
   """
     Extracts job information from a list of LinkedIn job search URLs and a list of keywords (plavras).
     
@@ -385,7 +385,7 @@ def create_time_param(time):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.post("/jobs")
-async def get_jobs(user_params: JobsParams):
+def get_jobs(user_params: JobsParams):
   """
     FastAPI endpoint that accepts a JobsParams object containing user search parameters.
     Returns the result of the extractJobs function as a JSON response.
@@ -415,7 +415,7 @@ async def get_jobs(user_params: JobsParams):
     urls.append(f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0")
 
   print('REQUESTED URIs: ', urls)
-  return JSONResponse(content=await extractJobs(urls, plavra))
+  return JSONResponse(content=extractJobs(urls, plavra))
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
