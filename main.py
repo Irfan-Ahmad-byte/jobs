@@ -210,12 +210,10 @@ def extractJobs(urls:list, plavras:list):
       
     cards = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(urls)) as executor:
-      card_futures = [executor.submit(get_job_cards, url) for url in urls]
-      for future in concurrent.futures.as_completed(card_futures):
-        cards.extend(future.result())
+      cards = executor.map(get_job_cards, urls)
     
     #cards = pool_processor(get_job_cards, urls)
-    #cards = [card for sublist in cards for card in sublist]
+    cards = [card for sublist in cards for card in sublist]
     
     total_cards = len(cards)
     
@@ -223,14 +221,13 @@ def extractJobs(urls:list, plavras:list):
       return [results, 0]
 
     # Loop through each card element and extract the relevant information
-    with concurrent.futures.ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
-      results = executor.map(get_job_info, cards, repeat(plavras))
         
-    #with ThreadPoolExecutor(max_workers=10) as executor:
-     # job_data_list = executor.map(get_job_info, cards, repeat(plavras))
+    job_data_list = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
+      job_data_list = executor.map(get_job_info, cards, repeat(plavras))
     
-    #for job in job_data_list:
-     # results.append(job)
+    for job in job_data_list:
+      results.append(job)
   
   except Exception as e:
     print(e)
@@ -257,7 +254,7 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(1, 6))
+    time.sleep(random.uniform(2, 10))
     res = requests.get(url, headers=headers, timeout=3)
     html = res.text
 
