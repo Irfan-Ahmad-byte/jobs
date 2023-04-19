@@ -196,7 +196,6 @@ def extractJobs(urls:list, plavras:list):
   """
   plavras = normalize_text(' '.join(plavras)).split(' ')
   # Create an empty list to store the results
-  results = []
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
@@ -209,12 +208,13 @@ def extractJobs(urls:list, plavras:list):
     total_cards = len(cards)
     
     if len(cards) ==0:
-      return [results, 0]
+      return [[], 0]
     
     
 
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
+    results = []
     for card in cards:
       results.append(get_job_info(card, plavras))
     #with ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
@@ -226,12 +226,13 @@ def extractJobs(urls:list, plavras:list):
      # results.append(job)
       
     print(results)
+    return [results, total_cards]
   
   except:
     ...
 
   # Return results list 
-  return [results, total_cards]
+    return [[], 0]
   
   
 def extractDescription(url):
