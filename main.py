@@ -300,7 +300,7 @@ def rate_job(job_description, plavras=False):
         return rating
         
     rating = rate_text(plavras, job_description)
-    rating['rating'] = round(rating, 4)
+    rating['rating'] = round(rating['rating'], 4)
     return rating
 
 
