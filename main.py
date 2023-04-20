@@ -110,13 +110,7 @@ def get_job_info(card, plavras):
   """
 
   # Get the text content and href attribute of the title link element
-  try:
-    jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-  except:
-    jobTitle = False
-  
-  if not jobTitle:
-    return
+  jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
     
   jobURL = card.find("a")['href']
   try:
@@ -146,8 +140,7 @@ def get_job_info(card, plavras):
           "dayPosted": dayPosted,
            "jobURL": jobURL,
            'rating': rating,
-          'location': location,
-          'jobDesc': jobDesc
+          'location': location
       }
       
   print('JOB: ', job)
