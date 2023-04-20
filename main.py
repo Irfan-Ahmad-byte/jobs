@@ -162,24 +162,23 @@ def get_job_cards(url):
     
     res = requests.get(url)
     cards = []
-    if res.status_code==200:
-      time.sleep(1)
-      html = res.content    
+    time.sleep(1)
+    html = res.content    
 
-      # Parse the HTML content using BeautifulSoup library (or any other method)
-      soup = BeautifulSoup(html, "html.parser")
+    # Parse the HTML content using BeautifulSoup library (or any other method)
+    soup = BeautifulSoup(html, "html.parser")
 
-     # Find all the elements with class name 'base-card' which contain each job listing
-      cards_ul = soup.find('ul', class_="jobs-search__results-list")
+   # Find all the elements with class name 'base-card' which contain each job listing
+    cards_ul = soup.find('ul', class_="jobs-search__results-list")
     
     
-      if cards_ul:
-        cards = cards_ul.find_all('li')
-      else:
-        try:
-          cards = soup.find_all('li')
-        except:
-          ...
+    if cards_ul:
+      cards = cards_ul.find_all('li')
+    else:
+      try:
+        cards = soup.find_all('li')
+      except:
+        ...
     
     return cards
 
@@ -251,7 +250,7 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(2, 10))
+    time.sleep(random.uniform(3, 12))
     res = requests.get(url, headers=headers, timeout=3)
     if res.status_code == 200:
       html = res.content
