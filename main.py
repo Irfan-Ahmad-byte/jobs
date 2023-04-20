@@ -208,12 +208,8 @@ def extractJobs(urls:list, plavras:list):
     
     cards = list(cards)
     
-    total_cards = len(cards)
-    
     if len(cards) ==0:
       return [[], 0]
-    
-    
 
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
@@ -232,6 +228,8 @@ def extractJobs(urls:list, plavras:list):
           job_data = executor.map(get_job_info, card, repeat(plavras))
       
         results.extend(list(job_data))
+    
+    total_cards = len(job_data_list)
     
 #    for job in job_data_list:
  #     results.append(job)
