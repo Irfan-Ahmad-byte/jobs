@@ -207,7 +207,6 @@ def extractJobs(urls:list, plavras:list):
       cards = executor.map(get_job_cards, urls)
     
     cards = list(cards)
-    cards = [card for card2 in cards for card in card2]
     
     total_cards = len(cards)
     
