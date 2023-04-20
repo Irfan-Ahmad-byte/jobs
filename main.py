@@ -110,10 +110,7 @@ def get_job_info(card, plavras):
   """
 
   # Get the text content and href attribute of the title link element
-  try:
-    jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-  except:
-    jobTitle = False
+  jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
   
   if not jobTitle:
     return
@@ -231,7 +228,6 @@ def extractJobs(urls:list, plavras:list):
     for job in job_data_list:
       results.append(job)
       
-    print(results)
     return [results, total_cards]
   
   except Exception as e:
