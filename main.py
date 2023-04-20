@@ -222,11 +222,16 @@ def extractJobs(urls:list, plavras:list):
     job_data_list = []
     
     for card in cards:
-      time.sleep(2)
-      with ThreadPoolExecutor(max_workers=sqrt(len(card))) as executor:
-        job_data = executor.map(get_job_info, card, repeat(plavras))
+      if len(card)>0:
+        time.sleep(2)
+        if sqrt(len(card)) >=1:
+          workers = round(sqrt(len(card)))
+        else:
+          workers = 1
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+          job_data = executor.map(get_job_info, card, repeat(plavras))
       
-      results.extend(list(job_data))
+        results.extend(list(job_data))
     
 #    for job in job_data_list:
  #     results.append(job)
