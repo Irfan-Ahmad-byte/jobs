@@ -34,7 +34,7 @@ from docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import os
 import requests
 import json
@@ -206,7 +206,7 @@ def extractJobs(urls:list, plavras:list):
 
   # Fetch the HTML content from the URL using requests library (or any other method)
   try:
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor:
       cards = executor.map(get_job_cards, urls)
     
     cards = list(cards)
@@ -223,18 +223,13 @@ def extractJobs(urls:list, plavras:list):
     #results = [get_job_info(card, plavras) for card in cards]
     results = []
     
-    #with ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
-     # job_data = executor.map(get_job_info, cards, repeat(plavras))
+    with ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
+      job_data = executor.map(get_job_info, cards, repeat(plavras))
       
-    with concurrent.futures.ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
-      job_futures = [executor.submit(get_job_info, jcard, plavras) for jcard in cards]
-      for future in concurrent.futures.as_completed(job_futures):
-        results.append(future.result())
-      
-    #job_data_list = list(job_data)
+    job_data_list = list(job_data)
     
-    #for job in job_data_list:
-     # results.append(job)
+    for job in job_data_list:
+      results.append(job)
       
     print(results)
     return [results, total_cards]
