@@ -250,36 +250,34 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(3, 12))
+    time.sleep(random.uniform(2, 10))
     res = requests.get(url, headers=headers, timeout=3)
-    if res.status_code == 200:
-      html = res.content
+    html = res.content
 
-      # Parse the HTML content using BeautifulSoup library (or any other method)
-      soup = BeautifulSoup(html, "html.parser")
+    # Parse the HTML content using BeautifulSoup library (or any other method)
+    soup = BeautifulSoup(html, "html.parser")
     
-      # Find the element with class name 'description__text' which contains the job's description
-      descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
-      
-      # Call the parseDescription function on this element and get the result dictionary
+    # Find the element with class name 'description__text' which contains the job's description
+    descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
+     
+    # Call the parseDescription function on this element and get the result dictionary
     
-      time.sleep(0.5)
-      # Get the text content of the element
-      if descriptionDiv is not None:
-        description = descriptionDiv.text.strip()
-      else:
-        description = 'no description specified'
+    time.sleep(0.5)
+    # Get the text content of the element
+    if descriptionDiv is not None:
+      description = descriptionDiv.text.strip()
+    else:
+      description = 'no description specified'
 
     # Add the complete description to result dictionary 
     description = normalize_text(description)
-
+    return description
+    
   except Exception as e:
     print('Error while getting job description: %s, %s', str(e), url)
+    return description
 
   #print('Finished getting job description from %s', url)
-
-  # Return result dictionary 
-  return description
 
    
 def rate_job(job_description, plavras=False):
