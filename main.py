@@ -30,7 +30,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from docsim import rate_text, normalize_text
+from module.docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -258,7 +258,7 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(3, 12))
+    time.sleep(random.uniform(2, 10))
     res = requests.get(url, headers=headers, timeout=3)
     if res.status_code == 200:
       html = res.content
