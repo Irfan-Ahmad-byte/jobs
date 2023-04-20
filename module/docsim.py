@@ -55,5 +55,5 @@ def rate_text(plavra, text):
     # Print the values for plavra_count, text_count, plavra_text_count, and sum_plavra_text_count
     print(f"plavra_count: {plavra_count}, text_count: {text_count}, plavra_text_count: {plavra_text_count}, sum_plavra_text_count: {sum_plavra_text_count}")
 
-    return {'plavra_count': plavra_coun}, 'text_count': text_count, 'plavra_text_count': plavra_text_count, 'sum_plavra_text_count': sum_plavra_text_count, 'rating': scaled_rating}
+    return {'plavra_count': plavra_coun, 'text_count': text_count, 'plavra_text_count': plavra_text_count, 'sum_plavra_text_count': sum_plavra_text_count, 'rating': scaled_rating}
 
