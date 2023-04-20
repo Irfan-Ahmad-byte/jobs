@@ -229,7 +229,7 @@ def extractJobs(urls:list, plavras:list):
       
         results.extend(list(job_data))
     
-    total_cards = len(job_data_list)
+    total_cards = len(results)
     
 #    for job in job_data_list:
  #     results.append(job)
