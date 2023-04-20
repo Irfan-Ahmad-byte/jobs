@@ -110,7 +110,13 @@ def get_job_info(card, plavras):
   """
 
   # Get the text content and href attribute of the title link element
-  jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+  try:
+    jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+  except:
+    jobTitle = False
+  
+  if not jobTitle:
+    return
     
   jobURL = card.find("a")['href']
   try:
@@ -140,7 +146,8 @@ def get_job_info(card, plavras):
           "dayPosted": dayPosted,
            "jobURL": jobURL,
            'rating': rating,
-          'location': location
+          'location': location,
+          'jobDesc': jobDesc
       }
       
   print('JOB: ', job)
@@ -162,23 +169,24 @@ def get_job_cards(url):
     
     res = requests.get(url)
     cards = []
-    time.sleep(1)
-    html = res.content    
+    if res.status_code==200:
+      time.sleep(1)
+      html = res.content    
 
-    # Parse the HTML content using BeautifulSoup library (or any other method)
-    soup = BeautifulSoup(html, "html.parser")
+      # Parse the HTML content using BeautifulSoup library (or any other method)
+      soup = BeautifulSoup(html, "html.parser")
 
-   # Find all the elements with class name 'base-card' which contain each job listing
-    cards_ul = soup.find('ul', class_="jobs-search__results-list")
+     # Find all the elements with class name 'base-card' which contain each job listing
+      cards_ul = soup.find('ul', class_="jobs-search__results-list")
     
     
-    if cards_ul:
-      cards = cards_ul.find_all('li')
-    else:
-      try:
-        cards = soup.find_all('li')
-      except:
-        ...
+      if cards_ul:
+        cards = cards_ul.find_all('li')
+      else:
+        try:
+          cards = soup.find_all('li')
+        except:
+          ...
     
     return cards
 
