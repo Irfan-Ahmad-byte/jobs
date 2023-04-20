@@ -254,7 +254,7 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(random.uniform(5))
+    time.sleep(5)
     res = requests.get(url, headers=headers, timeout=3)
     if res.status_code == 200:
       html = res.content
