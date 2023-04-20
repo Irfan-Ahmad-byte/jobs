@@ -220,8 +220,9 @@ def extractJobs(urls:list, plavras:list):
     #results = [get_job_info(card, plavras) for card in cards]
     results = []
     
-    with ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
-      job_data = executor.map(get_job_info, cards, repeat(plavras))
+    for card in cards:
+      with ThreadPoolExecutor(max_workers=sqrt(len(card))) as executor:
+        job_data = executor.map(get_job_info, card, repeat(plavras))
       
     job_data_list = list(job_data)
     
