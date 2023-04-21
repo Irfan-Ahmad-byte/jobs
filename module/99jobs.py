@@ -144,8 +144,8 @@ class Jobs99:
                 print(url, ': ', job_title)
       
                 # days
-                days = side_bar.find('div', class_='subscription-btn')
-                #days = days_div.find('div', class_='.progress').text.strip()
+                days_div = side_bar.find('div', class_='subscription-btn')
+                days = days_div.find('div', class_='progress').text.strip()
       
                 # Get the text content of the element
                 if descriptionDiv is not None:
@@ -156,17 +156,17 @@ class Jobs99:
                 # Add the complete description to result dictionary
                 description_page_info['description'] = normalize_text(description)
                 description_page_info['job_title'] = normalize_text(job_title)
-                description_page_info['days_ramained'] = days.text.strip()
+                description_page_info['days_ramained'] = days
                 
                 return description_page_info
 
         except Exception as e:
             print('Error while getting job description: %s, %s', str(e), url)
 
-        #print('Finished getting job description from %s', url)
+            #print('Finished getting job description from %s', url)
 
-        # Return result dictionary 
-        return None
+            # Return result dictionary 
+            return None
         
     def main(self):
         
@@ -189,8 +189,8 @@ class Jobs99:
             job_data_list = []
     
             for card in cards:
+                time.sleep(2)
                 if len(card)>0:
-                    time.sleep(1)
                     if sqrt(len(card)) >=1:
                         workers = round(sqrt(len(card)))
                 else:
