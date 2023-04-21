@@ -40,6 +40,8 @@ from itertools import repeat
 from math import sqrt
 
 from concurrent.futures import ThreadPoolExecutor
+from threading import Event, Thread
+
 import os
 import requests
 import json
@@ -49,6 +51,7 @@ import random
 import logging
 import unicodedata
 import urllib
+import random
 
 
 # Set up logging
@@ -102,10 +105,10 @@ LOCATION = 'Brazil'
 
 def execute_constructor(constructor):
     jobs = constructor.main()
-    return [*jobs]
+    return jobs
 
 
-def extractJobs(urls:list, plavras:list):
+def extractJobs(urls:list, plavras:list, timeout_event: Event):
   """
     Extracts job information from a list of LinkedIn job search URLs and a list of keywords (plavras).
     
@@ -133,72 +136,24 @@ def extractJobs(urls:list, plavras:list):
   
   for key, value in sites.items():
     if key == '99jobs':
-      constructors.append(Jobs99(value, plavras))
+      constructors.append(Jobs99(value, plavras, timeout_event))
     elif key == 'linkedin':
-      constructors.append(LinkedIn(value, plavras))
+      constructors.append(LinkedIn(value, plavras, timeout_event))
       
   totla_jobs = 0
   job_data_list = []
-  with ThreadPoolExecutor(max_workers=8) as executor:
+  with ThreadPoolExecutor(max_workers=10) as executor:
     job_data = executor.map(execute_constructor, constructors)
     
-    job_data_list.extend(list(job_data))
+    job_data_list= list(job_data)
     
   for jb in job_data_list:
     totla_jobs+= jb[1]
     jobs.extend(jb[0])
     
+  random.shuffle(jobs)
   return [jobs, totla_jobs]
   
-  
-def extractDescription(url):
-  """
-    Extracts job description and location from a LinkedIn job posting URL.
-    
-    Args:
-        url (str): A LinkedIn job posting URL.
-    
-    Returns:
-        dict: A dictionary containing the job description and location.
-  """
-  
-  description = ''
-  # Create an empty dictionary to store the result
-
-  # Fetch the HTML content from the URL using requests library (or any other method)
-  #logging.info('Getting job description from %s', url)
-  try:
-    time.sleep(3)
-    res = requests.get(url, headers=headers, timeout=3)
-    if res.status_code == 200:
-      html = res.content
-
-      # Parse the HTML content using BeautifulSoup library (or any other method)
-      soup = BeautifulSoup(html, "html.parser")
-    
-      # Find the element with class name 'description__text' which contains the job's description
-      descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
-      
-      # Call the parseDescription function on this element and get the result dictionary
-    
-      time.sleep(0.5)
-      # Get the text content of the element
-      if descriptionDiv is not None:
-        description = descriptionDiv.text.strip()
-      else:
-        description = 'no description specified'
-
-    # Add the complete description to result dictionary 
-    description = normalize_text(description)
-
-  except Exception as e:
-    print('Error while getting job description: %s, %s', str(e), url)
-
-  #print('Finished getting job description from %s', url)
-
-  # Return result dictionary 
-  return description
-
    
 #@app.post("/search_customer/")
 def search_customer(id):
@@ -323,9 +278,21 @@ def get_jobs(user_params: JobsParams):
             city_99jobs = urllib.parse.quote(city)
             _99jobs_link += f'&search%5Bcity%5D%5B%5D={city_99jobs}'
         urls.append(_99jobs_link)
+        
+    timeout_event = Event()
+
+    # Start the timeout thread before calling the extractJobs function
+    def stop_extraction():
+        time.sleep(90)
+        timeout_event.set()
+
+    extraction_thread = threading.Thread(target=stop_extraction)
+    extraction_thread.start()
+
+    result = extractJobs(urls, plavra, timeout_event)
 
     print('REQUESTED URIs: ', urls)
-    return JSONResponse(content=extractJobs(urls, plavra))
+    return JSONResponse(content=result)
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
@@ -364,7 +331,16 @@ if __name__ == "__main__":
         
     ]
 
-    ress = extractJobs(url_list, plavra)
+    timeout_event = Event()
+    # Start the timeout thread before calling the extractJobs function
+    def stop_extraction():
+        time.sleep(90)
+        timeout_event.set()
+
+    extraction_thread = Thread(target=stop_extraction)
+    extraction_thread.start()
+    
+    ress = extractJobs(url_list, plavra, timeout_event)
     
     elapsed_time = time.time() - start_time
     

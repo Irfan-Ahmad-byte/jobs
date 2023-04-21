@@ -9,6 +9,8 @@ from itertools import repeat
 from math import sqrt
 
 from concurrent.futures import ThreadPoolExecutor
+from threading import Event, Thread
+
 import os
 import requests
 import json
@@ -23,9 +25,10 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class LinkedIn:
-    def __init__(self, urls:list, palavras):
+    def __init__(self, urls:list, palavras, timeout_event: Event):
         self.urls = urls
-        self.plavras = palavras
+        self.palavras = palavras
+        self.timeout_event = timeout_event
         
     def get_job_cards(self, url):
         """
@@ -37,6 +40,9 @@ class LinkedIn:
         Returns:
             List[bs4.element.Tag]: A list of job cards as BeautifulSoup objects.
         """
+        
+        if self.timeout_event.is_set():
+            return []
         print('===========>Getting cards for: ', url)
         
         res = requests.get(url)
@@ -63,7 +69,7 @@ class LinkedIn:
         return cards
         
     
-    def get_job_info(self, card, plavras):
+    def get_job_info(self, card):
         """
           Extracts job information from a BeautifulSoup card object and a list of keywords (plavras).
           
@@ -74,6 +80,9 @@ class LinkedIn:
           Returns:
               dict: A dictionary containing job title, company name, day posted, job URL, rating, location, and job description.
         """
+        
+        if self.timeout_event.is_set():
+            return {}
 
         # Get the text content and href attribute of the title link element
         jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
@@ -101,7 +110,7 @@ class LinkedIn:
         except:
             dayPosted = False
           
-        rating = rate_text(normalize_text(jobDesc), plavras)
+        rating = rate_text(normalize_text(jobDesc), self.palavras)
               
         job = {
                 "jobTitle": jobTitle,
@@ -109,8 +118,7 @@ class LinkedIn:
                 "dayPosted": dayPosted,
                 "jobURL": jobURL,
                 'rating': rating,
-                'location': location,
-                'jobDesc': jobDesc
+                'location': location
             }
             
         print('JOB: ', job)
@@ -183,14 +191,20 @@ class LinkedIn:
             job_data_list = []
             
             for card in cards:
+                if self.timeout_event.is_set():
+                    break
                 if len(card)>0:
                     time.sleep(2)
-                    if sqrt(len(card)) >=1:
-                        workers = round(sqrt(len(card)))
+                    root = sqrt(len(card))
+                    if root >=1:
+                        if root > 10:
+                            workers = round(sqrt(len(card)))
+                        else:
+                            workers = len(card)
                     else:
                         workers = 1
                     with ThreadPoolExecutor(max_workers=workers) as executor:
-                        job_data = executor.map(self.get_job_info, card, repeat(self.plavras))
+                        job_data = executor.map(self.get_job_info, card)
                   
                     job_data_list.extend(list(job_data))
                     
@@ -234,7 +248,16 @@ if __name__ == '__main__':
         
     ]
 
-    linked = LinkedIn(url_list, plavra)
+    timeout_event = Event()
+    # Start the timeout thread before calling the extractJobs function
+    def stop_extraction():
+        time.sleep(90)
+        timeout_event.set()
+        
+    extraction_thread = Thread(target=stop_extraction)
+    extraction_thread.start()
+    
+    linked = LinkedIn(url_list, plavra, timeout_event)
     jobs = linked.main()
 
     elapsed_time = time.time() - start_time

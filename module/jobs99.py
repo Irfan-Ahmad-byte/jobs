@@ -29,6 +29,8 @@ from itertools import repeat
 from math import sqrt
 
 from concurrent.futures import ThreadPoolExecutor
+from threading import Event, Thread
+
 import os
 import requests
 import json
@@ -43,11 +45,15 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class Jobs99:
-    def __init__(self, urls:list, palavras):
+    def __init__(self, urls:list, palavras, timeout_event: Event):
         self.urls = urls
         self.palavras = palavras
+        self.timeout_event = timeout_event
         
     def get_job_cards(self, url):
+        if self.timeout_event.is_set():
+            return []
+            
         print('===========>Getting cards for: ', url)
         res = requests.get(url, timeout=3)
         cards = []
@@ -69,7 +75,9 @@ class Jobs99:
         return cards
     
     
-    def get_job_info(self, card, plavras):
+    def get_job_info(self, card):
+        if self.timeout_event.is_set():
+            return {}
         # Get the text content and href attribute of the title link element
         jobTitle = None
         dayPosted = None
@@ -95,7 +103,7 @@ class Jobs99:
             # Get the text content of the date span element
             dayPosted = jobDesc['days_ramained']
     
-            rating = rate_text(normalize_text(jobDesc['description']), plavras)
+            rating = rate_text(normalize_text(jobDesc['description']), self.palavras)
         
             job = {
           "jobTitle": jobTitle,
@@ -179,7 +187,7 @@ class Jobs99:
                 
             cards = list(cards)
             print('//////////////////////')
-            print('Totla 99jobs Cards: ', len(*cards))
+            print('Totla 99jobs Cards: ', len([crd for card in cards for crd in card]))
             print('//////////////////////')
     
             if len(cards) ==0:
@@ -191,6 +199,8 @@ class Jobs99:
             
             jobs_data_list = []
             for card in cards:
+                if self.timeout_event.is_set():
+                    break
                 if len(card)>0:
                     root = sqrt(len(card))
                     if root >=1:
@@ -202,7 +212,7 @@ class Jobs99:
                         workers = 1
                 
                     with ThreadPoolExecutor(max_workers=workers) as executor:
-                        job_data = executor.map(self.get_job_info, card, repeat(self.palavras))
+                        job_data = executor.map(self.get_job_info, card)
       
                     jobs_data_list.extend(list(job_data))
                     
@@ -213,7 +223,7 @@ class Jobs99:
         #    for job in job_data_list:
          #     results.append(job)
       
-            return [results, len(results)]
+            return [results, total_cards]
   
         except Exception as e:
             print(e)
@@ -240,7 +250,16 @@ if __name__ == '__main__':
 	'espanhol'
 	]
 	
-    jobs99 = Jobs99([WEBSITE_URL], plavra)
+    timeout_event = Event()
+    # Start the timeout thread before calling the extractJobs function
+    def stop_extraction():
+        time.sleep(3)
+        timeout_event.set()
+
+    extraction_thread = Thread(target=stop_extraction)
+    extraction_thread.start()
+    
+    jobs99 = Jobs99([WEBSITE_URL], plavra, timeout_event)
     jobs = jobs99.main()
 
     print('=+=+=+=+=+=+=+=+==+=+=+=++==+==++=+==+=+=+=+=+=+=+=+=+=+==+=+=+')
