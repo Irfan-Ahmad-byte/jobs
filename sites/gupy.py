@@ -1,21 +1,5 @@
 """
-This API module is designed to fetch, process, and rate job postings from LinkedIn. It uses FastAPI to provide an endpoint for getting jobs with specific titles, keywords, and location parameters. The API also utilizes the `rate_text` function from the `docsim.py` module to rate job postings based on the relevance of their descriptions to the provided keywords.
-
-Developer: Irfan Ahmad (devirfan.mlka@gmail.com / https://irfan-ahmad.com)
-Project Owner: Monica Piccinini (monicapiccinini12@gmail.com)
-
-The module contains the following functions:
-    - get_job_info: Extracts relevant information from a job card.
-    - get_job_cards: Fetches job cards from a LinkedIn URL.
-    - extractJobs: Fetches job listings from LinkedIn based on the provided URLs and keywords.
-    - extractDescription: Extracts job description and location from a LinkedIn job posting URL.
-    - rate_job: Rates a job based on its description and a list of keywords (plavras).
-    - search_customer: Searches for a customer by ID and returns relevant customer information.
-    - create_time_param: Converts a time period string into a LinkedIn time parameter.
-
-The module also defines the following FastAPI endpoints:
-    - /jobs: Accepts a POST request with job titles, keywords, time period, and location, and returns the relevant job listings.
-    - /description: Accepts a GET request with a job posting URL as a query parameter, and returns the job description and location.
+https://portal.gupy.io/en
 """
 
 
@@ -30,7 +14,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from module.docsim import rate_text, normalize_text
+from docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -110,7 +94,10 @@ def get_job_info(card, plavras):
   """
 
   # Get the text content and href attribute of the title link element
-  jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+  try:
+    jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+  except:
+    jobTitle = False
   
   if not jobTitle:
     return
@@ -135,7 +122,7 @@ def get_job_info(card, plavras):
   except:
     dayPosted = False
     
-  rating = rate_text(normalize_text(jobDesc), plavras)
+  rating = rate_job(normalize_text(jobDesc), plavras)
         
   job = {
           "jobTitle": jobTitle,
@@ -207,33 +194,28 @@ def extractJobs(urls:list, plavras:list):
       cards = executor.map(get_job_cards, urls)
     
     cards = list(cards)
+    cards = [card for card2 in cards for card in card2]
+    
+    total_cards = len(cards)
     
     if len(cards) ==0:
       return [[], 0]
+    
+    
 
     # Loop through each card element and extract the relevant information
     #results = [get_job_info(card, plavras) for card in cards]
     results = []
     
-    job_data_list = []
-    
-    for card in cards:
-      if len(card)>0:
-        time.sleep(2)
-        if sqrt(len(card)) >=1:
-          workers = round(sqrt(len(card)))
-        else:
-          workers = 1
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-          job_data = executor.map(get_job_info, card, repeat(plavras))
+    with ThreadPoolExecutor(max_workers=sqrt(len(cards))) as executor:
+      job_data = executor.map(get_job_info, cards, repeat(plavras))
       
-        results.extend(list(job_data))
+    job_data_list = list(job_data)
     
-    total_cards = len(results)
-    
-#    for job in job_data_list:
- #     results.append(job)
+    for job in job_data_list:
+      results.append(job)
       
+    print(results)
     return [results, total_cards]
   
   except Exception as e:
@@ -260,7 +242,7 @@ def extractDescription(url):
   # Fetch the HTML content from the URL using requests library (or any other method)
   #logging.info('Getting job description from %s', url)
   try:
-    time.sleep(3)
+    time.sleep(random.uniform(3, 12))
     res = requests.get(url, headers=headers, timeout=3)
     if res.status_code == 200:
       html = res.content
@@ -290,6 +272,31 @@ def extractDescription(url):
 
   # Return result dictionary 
   return description
+
+   
+def rate_job(job_description, plavras=False):
+    """
+    Rates a job based on its description and a list of keywords (plavras).
+    
+    Args:
+        job_description (str): The job description as a string.
+        plavras (List[str], optional): A list of keywords to rate the job. Defaults to False.
+    
+    Returns:
+        float: The rating score, rounded to 2 decimal places.
+    """
+    
+    #print('Now rating jobs:/*/*/*/*/')
+    rating = 0
+
+    # Check if there are any plavras for the user
+    if not plavras:
+        return rating
+        
+    rating = rate_text(plavras, job_description)
+
+    return round(rating, 4)
+
 
    
 #@app.post("/search_customer/")

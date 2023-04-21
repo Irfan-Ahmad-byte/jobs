@@ -6,7 +6,7 @@ def normalize_text(text):
     return unicodedata.normalize('NFC', text)
     
 
-def rate_text(plavra, text):
+def rate_text(text, plavra=False):
     """
     Calculate a rating score for a given text based on the cumulative frequency of words in plavra within the text.
 
@@ -20,6 +20,12 @@ def rate_text(plavra, text):
     float: The rating score between 0 and 5, where 0 indicates no relevance and 5 indicates maximum relevance.
     """
     
+    #print('Now rating jobs:/*/*/*/*/')
+    rating = 0
+
+    # Check if there are any plavras for the user
+    if not plavra:
+        return rating
     
     plavra = normalize_text(' '.join(plavra)).split(' ')
 
@@ -50,7 +56,7 @@ def rate_text(plavra, text):
     normalized_rating = sum_plavra_text_count / (plavra_count * text_count) if plavra_count * text_count != 0 else 0
 
     # Scale the rating to be between 0 and 5
-    scaled_rating = normalized_rating * 5
+    scaled_rating = round(normalized_rating * 5, 4)
 
     # Print the values for plavra_count, text_count, plavra_text_count, and sum_plavra_text_count
     print(f"plavra_count: {plavra_count}, text_count: {text_count}, plavra_text_count: {plavra_text_count}, sum_plavra_text_count: {sum_plavra_text_count}")
