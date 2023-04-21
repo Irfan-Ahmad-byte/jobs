@@ -24,7 +24,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from docsim import rate_text, normalize_text
+from module.docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -49,7 +49,7 @@ class Jobs99:
         
     def get_job_cards(self, url):
         print('===========>Getting cards for: ', url)
-        res = requests.get(url)
+        res = requests.get(url, timeout=3)
         cards = []
         if res.status_code==200:
             time.sleep(.5)
@@ -90,27 +90,25 @@ class Jobs99:
         except:
             companyName = 'Not specified'
         
-        if jobDesc:
+        if jobDesc is not None:
             jobTitle = jobDesc['job_title']
             # Get the text content of the date span element
             dayPosted = jobDesc['days_ramained']
-            description = jobDesc['description']
     
             rating = rate_text(normalize_text(jobDesc['description']), plavras)
         
-        job = {
+            job = {
           "jobTitle": jobTitle,
           "companyName": companyName,
           "dayPosted": dayPosted,
            "jobURL": jobURL,
            'rating': rating,
-          'location': normalize_text(location),
-          'jobDesc': description
-        }
+          'location': normalize_text(location)
+            }
       
-        print('JOB: ', json.dumps(job, indent=2))
-        # Create a dictionary with all these information and append it to results list 
-        return job
+            print('JOB: ', json.dumps(job, indent=2))
+            # Create a dictionary with all these information and append it to results list 
+            return job
 
 
     def extractDescription(self, url):
@@ -126,7 +124,6 @@ class Jobs99:
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
         try:
-            time.sleep(3)
             res = requests.get(url, headers=headers, timeout=3)
             if res.status_code == 200:
                 description_page_info = {}
@@ -136,7 +133,7 @@ class Jobs99:
                 soup = BeautifulSoup(html, "html.parser")
     
                 # Find the element with class name 'description__text' which contains the job's description
-                descriptionDiv = soup.find("div", class_="companies")
+                descriptionDiv = soup.find("div", class_="opportunities-details")
       
                 side_bar = soup.find('div', class_='details')
                 # job title
@@ -145,7 +142,13 @@ class Jobs99:
       
                 # days
                 days_div = side_bar.find('div', class_='subscription-btn')
-                days = days_div.find('div', class_='progress').text.strip()
+                extract_a_tag = days_div.find('a')
+                extract_a_tag.extract()
+                
+                if days_div:
+                    days = days_div.text.strip()
+                else:
+                    days = 'days not given'
       
                 # Get the text content of the element
                 if descriptionDiv is not None:
@@ -176,7 +179,7 @@ class Jobs99:
                 
             cards = list(cards)
             print('//////////////////////')
-            print('Totla Cards: ', len(*cards))
+            print('Totla 99jobs Cards: ', len(*cards))
             print('//////////////////////')
     
             if len(cards) ==0:
@@ -185,28 +188,32 @@ class Jobs99:
             # Loop through each card element and extract the relevant information
             #results = [get_job_info(card, plavras) for card in cards]
             results = []
-    
-            job_data_list = []
-    
+            
+            jobs_data_list = []
             for card in cards:
-                time.sleep(2)
                 if len(card)>0:
-                    if sqrt(len(card)) >=1:
-                        workers = round(sqrt(len(card)))
-                else:
-                    workers = 1
+                    root = sqrt(len(card))
+                    if root >=1:
+                        if root > 10:
+                            workers = round(sqrt(len(card)))
+                        else:
+                            workers = len(card)
+                    else:
+                        workers = 1
                 
-                with ThreadPoolExecutor(max_workers=workers) as executor:
-                    job_data = executor.map(self.get_job_info, card, repeat(self.palavras))
+                    with ThreadPoolExecutor(max_workers=workers) as executor:
+                        job_data = executor.map(self.get_job_info, card, repeat(self.palavras))
       
-                    results.extend(list(job_data))
+                    jobs_data_list.extend(list(job_data))
+                    
+            results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)
     
         #    for job in job_data_list:
          #     results.append(job)
       
-            return [results, total_cards]
+            return [results, len(results)]
   
         except Exception as e:
             print(e)
@@ -214,7 +221,7 @@ class Jobs99:
   
 
 if __name__ == '__main__':
-    WEBSITE_URL = 'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D=Engenharia'
+    WEBSITE_URL = 'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D=software%20engineer&search%5Bstate%5D=8&search%5Bcity%5D%5B%5D=Bras%C3%ADlia'
     
     plavra = [
   	'manter registros',

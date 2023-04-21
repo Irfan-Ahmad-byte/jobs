@@ -30,7 +30,12 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
+
 from module.docsim import rate_text, normalize_text
+
+from module.jobs99 import Jobs99
+from module.linkedin import LinkedIn
+
 from itertools import repeat
 from math import sqrt
 
@@ -43,6 +48,7 @@ import time
 import random
 import logging
 import unicodedata
+import urllib
 
 
 # Set up logging
@@ -93,97 +99,10 @@ url2 = 'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?k
 
 LOCATION = 'Brazil'
 
-    
 
-def get_job_info(card, plavras):
-  """
-    Extracts job information from a BeautifulSoup card object and a list of keywords (plavras).
-    
-    Args:
-        card (bs4.element.Tag): A BeautifulSoup object representing a single job card.
-        plavras (List[str]): A list of keywords to rate the job.
-    
-    Returns:
-        dict: A dictionary containing job title, company name, day posted, job URL, rating, location, and job description.
-  """
-
-  # Get the text content and href attribute of the title link element
-  jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
-  
-  if not jobTitle:
-    return
-    
-  jobURL = card.find("a")['href']
-  try:
-    location = card.find("span", class_='job-search-card__location').text.strip()
-  except:
-    location = 'location not given'
-
-  jobDesc = extractDescription(jobURL)
-  
-  # Get the text content of the company link element
-  try:
-    companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
-  except:
-    companyName = 'Not specified'
-
-  # Get the text content of the date span element
-  try:
-    dayPosted = card.find("time").text.strip()
-  except:
-    dayPosted = False
-    
-  rating = rate_text(normalize_text(jobDesc), plavras)
-        
-  job = {
-          "jobTitle": jobTitle,
-          "companyName": companyName,
-          "dayPosted": dayPosted,
-           "jobURL": jobURL,
-           'rating': rating,
-          'location': location,
-          'jobDesc': jobDesc
-      }
-      
-  print('JOB: ', job)
-      # Create a dictionary with all these information and append it to results list 
-  return job
-    
-    
-def get_job_cards(url):
-    """
-    Fetches the HTML content from a LinkedIn jobs search URL and returns a list of job cards as BeautifulSoup objects.
-    
-    Args:
-        url (str): A LinkedIn job search URL.
-    
-    Returns:
-        List[bs4.element.Tag]: A list of job cards as BeautifulSoup objects.
-    """
-    
-    
-    res = requests.get(url)
-    cards = []
-    if res.status_code==200:
-      time.sleep(1)
-      html = res.content    
-
-      # Parse the HTML content using BeautifulSoup library (or any other method)
-      soup = BeautifulSoup(html, "html.parser")
-
-     # Find all the elements with class name 'base-card' which contain each job listing
-      cards_ul = soup.find('ul', class_="jobs-search__results-list")
-    
-    
-      if cards_ul:
-        cards = cards_ul.find_all('li')
-      else:
-        try:
-          cards = soup.find_all('li')
-        except:
-          ...
-    
-    return cards
+def execute_constructor(constructor):
+    jobs = constructor.main()
+    return [*jobs]
 
 
 def extractJobs(urls:list, plavras:list):
@@ -197,48 +116,39 @@ def extractJobs(urls:list, plavras:list):
     Returns:
         Tuple[List[dict], int]: A tuple containing a list of job dictionaries and the total number of cards.
   """
-  # Create an empty list to store the results
-
-  # Fetch the HTML content from the URL using requests library (or any other method)
-  try:
-    with ThreadPoolExecutor(max_workers=10) as executor:
-      cards = executor.map(get_job_cards, urls)
-    
-    cards = list(cards)
-    
-    if len(cards) ==0:
-      return [[], 0]
-
-    # Loop through each card element and extract the relevant information
-    #results = [get_job_info(card, plavras) for card in cards]
-    results = []
-    
-    job_data_list = []
-    
-    for card in cards:
-      if len(card)>0:
-        time.sleep(2)
-        if sqrt(len(card)) >=1:
-          workers = round(sqrt(len(card)))
-        else:
-          workers = 1
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-          job_data = executor.map(get_job_info, card, repeat(plavras))
-      
-        results.extend(list(job_data))
-    
-    total_cards = len(results)
-    
-#    for job in job_data_list:
- #     results.append(job)
-      
-    return [results, total_cards]
+  # separate job URLS
+  sites = {}
+  sites['99jobs'] = []
+  sites['linkedin'] = []
   
-  except Exception as e:
-    print(e)
-    return [[], 0]
-
-  # Return results list 
+  for url in urls:
+    if '99jobs' in url:
+      sites['99jobs'].append(url)
+    elif 'linkedin' in url:
+      sites['linkedin'].append(url)
+      
+  jobs = []
+  
+  constructors = []
+  
+  for key, value in sites.items():
+    if key == '99jobs':
+      constructors.append(Jobs99(value, plavras))
+    elif key == 'linkedin':
+      constructors.append(LinkedIn(value, plavras))
+      
+  totla_jobs = 0
+  job_data_list = []
+  with ThreadPoolExecutor(max_workers=8) as executor:
+    job_data = executor.map(execute_constructor, constructors)
+    
+    job_data_list.extend(list(job_data))
+    
+  for jb in job_data_list:
+    totla_jobs+= jb[1]
+    jobs.extend(jb[0])
+    
+  return [jobs, totla_jobs]
   
   
 def extractDescription(url):
@@ -354,7 +264,7 @@ def create_time_param(time):
     TPeriod = "&f_TPR=r2592000";
   
   elif time == "any time":
-      TPeriod = ""
+      TPeriod = None
       
   return TPeriod
 
@@ -362,7 +272,7 @@ def create_time_param(time):
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.post("/jobs")
 def get_jobs(user_params: JobsParams):
-  """
+    """
     FastAPI endpoint that accepts a JobsParams object containing user search parameters.
     Returns the result of the extractJobs function as a JSON response.
     
@@ -371,27 +281,51 @@ def get_jobs(user_params: JobsParams):
     
     Returns:
         fastapi.responses.JSONResponse: A JSON response containing a list of job dictionaries and the total number of cards.
-  """
+    """
 
-  titles = user_params.titles
-  plavra = user_params.plavra
-  time_period = user_params.time_period
-  location = user_params.location
-  
-  time_period = create_time_param(time_period)
-    
-#  user = search_customer(id) # using woocommerce
+    titles = user_params.titles
+    plavra = user_params.plavra
+    time_period = user_params.time_period
+    location = user_params.location
 
-  location = location.replace(" ", "%20").replace(",", "%2C")
+    time_period = create_time_param(time_period)
 
-  urls = []
-  
-  for url in titles:
-    keywords = url.replace(" ", "%20").replace(",", "%2C")
-    urls.append(f"https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}{time_period}&position=1&pageNum=0")
+    # Split location into city, state, and country
+    location_parts = location.split(', ')
+    city = state = None
+    country = location_parts[-1]
+    if len(location_parts) >= 2:
+        state = location_parts[-2]
+    if len(location_parts) >= 3:
+        city = location_parts[-3]
 
-  print('REQUESTED URIs: ', urls)
-  return JSONResponse(content=extractJobs(urls, plavra))
+    location = location.replace(" ", "%20").replace(",", "%2C")
+
+    urls = []
+
+    for title in titles:
+        keywords = urllib.parse.quote(title)
+        keywords_99jobs = urllib.parse.quote(title)
+
+        # LinkedIn URL
+        linkedin_link = f'https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}'
+        if time_period:
+            linkedin_link += time_period
+        linkedin_link += '&position=1&pageNum=0'
+        urls.append(linkedin_link)
+
+        # 99jobs URL
+        _99jobs_link = f'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D={keywords_99jobs}'
+        if state:
+            state_99jobs = urllib.parse.quote(state)
+            _99jobs_link += f'&search%5Bstate%5D={state_99jobs}'
+        if city:
+            city_99jobs = urllib.parse.quote(city)
+            _99jobs_link += f'&search%5Bcity%5D%5B%5D={city_99jobs}'
+        urls.append(_99jobs_link)
+
+    print('REQUESTED URIs: ', urls)
+    return JSONResponse(content=extractJobs(urls, plavra))
 
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
@@ -423,14 +357,18 @@ if __name__ == "__main__":
 	]
   try:
     start_time = time.time()
+    url_list = [
+        'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D=Engenharia',
+        'https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
+        'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225&location=Brazil',
+        
+    ]
 
-    ress = extractJobs(['https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
-    'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225&location=Brazil'], plavra)
+    ress = extractJobs(url_list, plavra)
     
     elapsed_time = time.time() - start_time
     
-    for res in ress[0]:
-      print(res['rating'])
+    print(json.dumps(ress, indent=2))
     print(f"Time taken to extract job description: {elapsed_time:.2f} seconds")
   except Exception as e:
     logging.error('Error while running the application: %s', str(e))
