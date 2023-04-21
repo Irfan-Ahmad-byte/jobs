@@ -24,7 +24,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from ../module.docsim import rate_text, normalize_text
+from docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -39,16 +39,20 @@ import logging
 import unicodedata
 
 
+requests.adapters.DEFAULT_RETRIES = 3
+headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
+
 class Jobs99:
     def __init__(self, urls:list, palavras):
-        self.urls = ulrs
+        self.urls = urls
         self.palavras = palavras
         
-    def get_cards(self, url):
+    def get_job_cards(self, url):
+        print('===========>Getting cards for: ', url)
         res = requests.get(url)
         cards = []
         if res.status_code==200:
-            time.sleep(1)
+            time.sleep(.5)
             html = res.content
       
             # Parse the HTML content using BeautifulSoup library (or any other method)
@@ -59,7 +63,7 @@ class Jobs99:
       
             # get cards
       
-            if cards_ul:
+            if cards_list:
                 cards = cards_list.find_all('a', class_='opportunity-card')
         
         return cards
@@ -68,6 +72,9 @@ class Jobs99:
     def get_job_info(self, card, plavras):
         # Get the text content and href attribute of the title link element
         jobTitle = None
+        dayPosted = None
+        description = None
+        rating = None
     
         jobURL = card['href']
         try:
@@ -75,19 +82,21 @@ class Jobs99:
         except:
             location = 'location not given'
 
-        jobDesc = extractDescription(jobURL)
+        jobDesc = self.extractDescription(jobURL)
   
         # Get the text content of the company link element
         try:
             companyName = card.find('div', class_='opportunity-company-infos').find("h2").text.strip()
         except:
             companyName = 'Not specified'
+        
+        if jobDesc:
+            jobTitle = jobDesc['job_title']
+            # Get the text content of the date span element
+            dayPosted = jobDesc['days_ramained']
+            description = jobDesc['description']
     
-        jobTitle = jobDesc['job_title']
-        # Get the text content of the date span element
-        dayPosted = jobDesc['days_ramained']
-    
-        rating = rate_text(normalize_text(jobDesc['description']), plavras)
+            rating = rate_text(normalize_text(jobDesc['description']), plavras)
         
         job = {
           "jobTitle": jobTitle,
@@ -95,11 +104,11 @@ class Jobs99:
           "dayPosted": dayPosted,
            "jobURL": jobURL,
            'rating': rating,
-          'location': location,
-          'jobDesc': jobDesc['description']
+          'location': normalize_text(location),
+          'jobDesc': description
         }
       
-        print('JOB: ', job)
+        print('JOB: ', json.dumps(job, indent=2))
         # Create a dictionary with all these information and append it to results list 
         return job
 
@@ -114,34 +123,30 @@ class Jobs99:
     Returns:
         dict: A dictionary containing the job description and location.
         """
-  
-        description_page_info = {}
-        # Create an empty dictionary to store the result
-
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
         try:
             time.sleep(3)
             res = requests.get(url, headers=headers, timeout=3)
             if res.status_code == 200:
+                description_page_info = {}
                 html = res.content
 
                 # Parse the HTML content using BeautifulSoup library (or any other method)
                 soup = BeautifulSoup(html, "html.parser")
     
                 # Find the element with class name 'description__text' which contains the job's description
-                descriptionDiv = soup.find("div", class_="opportunities-details")
+                descriptionDiv = soup.find("div", class_="companies")
       
                 side_bar = soup.find('div', class_='details')
                 # job title
                 job_title = side_bar.find('h2').text.strip()
+                print(url, ': ', job_title)
       
                 # days
-                days = side_bar.find('div', class_='subscription-btn').find('div', class_='.progress').text.strip()
+                days = side_bar.find('div', class_='subscription-btn')
+                #days = days_div.find('div', class_='.progress').text.strip()
       
-                # Call the parseDescription function on this element and get the result dictionary
-    
-                time.sleep(0.5)
                 # Get the text content of the element
                 if descriptionDiv is not None:
                     description = descriptionDiv.text.strip()
@@ -150,8 +155,10 @@ class Jobs99:
 
                 # Add the complete description to result dictionary
                 description_page_info['description'] = normalize_text(description)
-                description_page_info['job_title'] = normalize_text(description)
-                description_page_info['days_ramained'] = normalize_text(description)
+                description_page_info['job_title'] = normalize_text(job_title)
+                description_page_info['days_ramained'] = days.text.strip()
+                
+                return description_page_info
 
         except Exception as e:
             print('Error while getting job description: %s, %s', str(e), url)
@@ -159,16 +166,18 @@ class Jobs99:
         #print('Finished getting job description from %s', url)
 
         # Return result dictionary 
-        return description_page_info
+        return None
         
-    def main():
+    def main(self):
         
-        results = []
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
                 cards = executor.map(self.get_job_cards, self.urls)
                 
             cards = list(cards)
+            print('//////////////////////')
+            print('Totla Cards: ', len(*cards))
+            print('//////////////////////')
     
             if len(cards) ==0:
                 return [[], 0]
@@ -181,16 +190,16 @@ class Jobs99:
     
             for card in cards:
                 if len(card)>0:
-                    time.sleep(2)
+                    time.sleep(1)
                     if sqrt(len(card)) >=1:
-                    workers = round(sqrt(len(card)))
+                        workers = round(sqrt(len(card)))
                 else:
                     workers = 1
                 
                 with ThreadPoolExecutor(max_workers=workers) as executor:
                     job_data = executor.map(self.get_job_info, card, repeat(self.palavras))
       
-                results.extend(list(job_data))
+                    results.extend(list(job_data))
     
             total_cards = len(results)
     
@@ -227,8 +236,8 @@ if __name__ == '__main__':
     jobs99 = Jobs99([WEBSITE_URL], plavra)
     jobs = jobs99.main()
 
-    for job in jobs:
-        print(job)
+    print('=+=+=+=+=+=+=+=+==+=+=+=++==+==++=+==+=+=+=+=+=+=+=+=+=+==+=+=+')
+    print(json.dumps(jobs, indent=2))
    
 
   

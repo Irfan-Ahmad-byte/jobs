@@ -59,7 +59,7 @@ def rate_text(text, plavra=False):
     scaled_rating = round(normalized_rating * 5, 4)
 
     # Print the values for plavra_count, text_count, plavra_text_count, and sum_plavra_text_count
-    print(f"plavra_count: {plavra_count}, text_count: {text_count}, plavra_text_count: {plavra_text_count}, sum_plavra_text_count: {sum_plavra_text_count}")
+    print(f"plavra_count: {plavra_count}, text_count: {text_count}, plavra_text_count: {plavra_text_count}, sum_plavra_text_count: {sum_plavra_text_count}, rating: {scaled_rating}")
 
     return {'plavra_count': plavra_count, 'text_count': text_count, 'plavra_text_count': plavra_text_count, 'sum_plavra_text_count': sum_plavra_text_count, 'rating': scaled_rating}
 
