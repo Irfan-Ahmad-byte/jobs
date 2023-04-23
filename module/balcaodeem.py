@@ -2,15 +2,6 @@
 https://www.balcaodeempregos.com.br/
 """
 
-'''
-get location is => https://www.infojobs.com.br/mf-publicarea/api/autocompleteapi/locations?query=Bras%C3%ADlia
-response: {"suggestions":[{"data":{"id":"5203868","group":"Cidades","groupType":5,"groupIconHtml":"\r\n\r\n    <span class=\"icon icon-location   icon-size-16\">\r\n        <svg><use xlink:href=\"#location\" /></svg>\r\n    </span>\r\n"},"value":"Brasília - DF"},{"data":{"id":"5206605","group":"Cidades","groupType":5,"groupIconHtml":"\r\n\r\n    <span class=\"icon icon-location   icon-size-16\">\r\n        <svg><use xlink:href=\"#location\" /></svg>\r\n    </span>\r\n"},"value":"Brasília Legal - PA"},{"data":{"id":"5204830","group":"Cidades","groupType":5,"groupIconHtml":"\r\n\r\n    <span class=\"icon icon-location   icon-size-16\">\r\n        <svg><use xlink:href=\"#location\" /></svg>\r\n    </span>\r\n"},"value":"Brasília de Minas - MG"}]}
-
-jobs link => https://www.infojobs.com.br/empregos.aspx?palabra=Jovem+Aprendiz&poblacion=5203868
-
-
-'''
-
 from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
@@ -36,10 +27,11 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class Balca:
-    def __init__(self, urls:list, palavras, timeout_event: Event):
+    def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
         self.urls = urls
         self.palavras = palavras
         self.timeout_event = timeout_event
+        self.card_num = card_num
         
     def get_job_cards(self, url):
         if self.timeout_event.is_set():
@@ -62,6 +54,8 @@ class Balca:
             if cards_list:
                 cards.extend(cards_list.find_all('div', class_='panel-vaga'))
                     
+            if len(cards)>self.card_num:
+                return cards[0:self.card_num]
             return cards
         
         return cards
