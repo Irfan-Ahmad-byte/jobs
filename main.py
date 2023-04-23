@@ -323,8 +323,8 @@ def get_jobs(user_params: JobsParams):
         urls.append(_trabalha_link)'''
         
         # gupy
-        _gupu_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
-        urls.append(_trabalha_link)
+        _gupy_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
+        urls.append(_gupy_url)
         
     timeout_event = Event()
     extraction_completed = Event()
