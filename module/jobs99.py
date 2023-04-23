@@ -72,7 +72,7 @@ class Jobs99:
             soup = BeautifulSoup(html, "html.parser")
             
             if not '?page=' in url:
-                total_jobs_element = soup.find('span', {'id'="text-total-opportunities"})
+                total_jobs_element = soup.find('span', {'id':"text-total-opportunities"})
                 if total_jobs_element:
                     self.total_jobs = total_jobs_element.text.strip()
             else:
