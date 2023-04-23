@@ -306,7 +306,7 @@ def get_jobs(user_params: JobsParams):
         if city:
             city_99jobs = urllib.parse.quote(city)
             _99jobs_link += f'&search%5Bcity%5D%5B%5D={city_99jobs}'
-        urls.append(_99jobs_link)
+        urls.append(_99jobs_link)'''
         
         # infojobs URL
         _infojobs_link = f'https://www.infojobs.com.br/empregos.aspx?palabra={keywords}'
@@ -316,13 +316,13 @@ def get_jobs(user_params: JobsParams):
                 _infojobs_link+= f'&poblacion={loc}'
                 urls.append(_infojobs_link)
         else:
-            urls.append(_infojobs_link)'''
+            urls.append(_infojobs_link)
             
-        # trabalha
+        '''# trabalha
         _trabalha_link = f'https://www.trabalhabrasil.com.br/vagas-empregos-em-sao-paulo-sp/{keywords}'
         urls.append(_trabalha_link)
         
-        '''# gupy
+        # gupy
         _gupy_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
         urls.append(_gupy_url)'''
         
