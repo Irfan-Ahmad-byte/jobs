@@ -318,16 +318,27 @@ def get_jobs(user_params: JobsParams):
         
         
     timeout_event = Event()
-
-    # Start the timeout thread before calling the extractJobs function
+    result = []
+    extraction_completed = Event()
+  
     def stop_extraction():
-        time.sleep(90)
+        extraction_completed.wait(90)  # Wait for up to 90 seconds for extraction to complete
         timeout_event.set()
 
-    extraction_thread = threading.Thread(target=stop_extraction)
+    def perform_extraction():
+        global result
+        result = extractJobs(url_list, plavra, timeout_event)
+        extraction_completed.set()  # Signal that extraction is complete
+
+
+    extraction_thread = Thread(target=perform_extraction)
     extraction_thread.start()
 
-    result = extractJobs(urls, plavra, timeout_event)
+    timeout_thread = Thread(target=stop_extraction)
+    timeout_thread.start()
+
+    extraction_thread.join()  # Wait for extraction_thread to finish
+    timeout_thread.join()  # Wait for timeout_thread to finish
 
     print('REQUESTED URIs: ', urls)
     return JSONResponse(content=result)
@@ -376,19 +387,33 @@ if __name__ == "__main__":
     ]
 
     timeout_event = Event()
-    # Start the timeout thread before calling the extractJobs function
+    result = []
+    extraction_completed = Event()
+  
     def stop_extraction():
-        time.sleep(300)
+        extraction_completed.wait(90)  # Wait for up to 90 seconds for extraction to complete
         timeout_event.set()
 
-    extraction_thread = Thread(target=stop_extraction)
+    def perform_extraction():
+        global result
+        result = extractJobs(url_list, plavra, timeout_event)
+        extraction_completed.set()  # Signal that extraction is complete
+
+
+    extraction_thread = Thread(target=perform_extraction)
     extraction_thread.start()
+
+    timeout_thread = Thread(target=stop_extraction)
+    timeout_thread.start()
+
+    extraction_thread.join()  # Wait for extraction_thread to finish
+    timeout_thread.join()  # Wait for timeout_thread to finish
     
-    ress = extractJobs(url_list, plavra, timeout_event)
+    #ress = extractJobs(url_list, plavra, timeout_event)
     
     elapsed_time = time.time() - start_time
     
-    print(json.dumps(ress, indent=2))
+    print(json.dumps(result, indent=2))
     print(f"Time taken to extract job description: {elapsed_time:.2f} seconds")
   except Exception as e:
     logging.error('Error while running the application: %s', str(e))
