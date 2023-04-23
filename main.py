@@ -335,7 +335,7 @@ def get_jobs(user_params: JobsParams):
 
     def perform_extraction():
         global result
-        result = extractJobs(url_list, plavra, timeout_event, cards_offset)
+        result = extractJobs(urls, plavra, timeout_event, cards_offset)
         extraction_completed.set()  # Signal that extraction is complete
 
 
