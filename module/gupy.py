@@ -37,10 +37,11 @@ def get_location(city):
     return location_ids
 
 class Gupy:
-    def __init__(self, urls:list, palavras, timeout_event: Event):
+    def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
         self.urls = urls
         self.palavras = palavras
         self.timeout_event = timeout_event
+        self.card_num=card_num
         
     def get_job_cards(self, url):
         if self.timeout_event.is_set():
@@ -55,6 +56,8 @@ class Gupy:
             time.sleep(.5)
             cards = res.json()["data"]
             print(f'Total jobs for {url}: ', len(cards))
+            if len(cards)>self.card_num:
+                return cards[0:self.card_num]
             return cards
         
         return cards

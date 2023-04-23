@@ -46,10 +46,11 @@ def get_location(city):
     return location_ids
 
 class Infojobs:
-    def __init__(self, urls:list, palavras, timeout_event: Event):
+    def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
         self.urls = urls
         self.palavras = palavras
         self.timeout_event = timeout_event
+        self.card_num = card_num
         self.cards = []
         self.total_pages = 1
         self.job_keyword = None
@@ -88,7 +89,9 @@ class Infojobs:
             
                 with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
                     cards = executor.map(self.get_job_cards, numbered_pages)
-                    
+            
+            if len(self.cards)>self.card_num:
+                return self.cards[0:self.card_num]
             return self.cards
         
         return self.cards

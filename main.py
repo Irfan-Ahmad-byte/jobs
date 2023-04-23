@@ -65,6 +65,7 @@ class JobsParams(BaseModel):
     plavra: Union[List[str], bool]
     time_period: str
     location: str
+    cards_offset: Optional[int] = 10
 
 '''
 wcapi = API(
@@ -111,7 +112,7 @@ def execute_constructor(constructor):
     return jobs
 
 
-def extractJobs(urls:list, plavras:list, timeout_event: Event):
+def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
   """
     Extracts job information from a list of LinkedIn job search URLs and a list of keywords (plavras).
     
@@ -154,15 +155,15 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event):
   
   for key, value in sites.items():
     if key == '99jobs':
-      constructors.append(Jobs99(value, plavras, timeout_event))
+      constructors.append(Jobs99(value, plavras, timeout_event, card_num))
     elif key == 'linkedin':
-      constructors.append(LinkedIn(value, plavras, timeout_event))
+      constructors.append(LinkedIn(value, plavras, timeout_event, card_num))
     elif key == 'trabalha':
-      constructors.append(Trabalha(value, plavras, timeout_event))
+      constructors.append(Trabalha(value, plavras, timeout_event, card_num))
     elif key == 'infojobs':
-      constructors.append(Infojobs(value, plavras, timeout_event))
+      constructors.append(Infojobs(value, plavras, timeout_event, card_num))
     elif key == 'gupy':
-      constructors.append(Gupy(value, plavras, timeout_event))
+      constructors.append(Gupy(value, plavras, timeout_event, card_num))
       
   totla_jobs = 0
   job_data_list = []
@@ -266,6 +267,11 @@ def get_jobs(user_params: JobsParams):
     plavra = user_params.plavra
     time_period = user_params.time_period
     location = user_params.location
+    
+    try:
+        cards_offset = user_params.cards_offset
+    except:
+        cards_offset = 10
 
     time_period = create_time_param(time_period)
 
@@ -316,6 +322,9 @@ def get_jobs(user_params: JobsParams):
         _trabalha_link = f'https://www.trabalhabrasil.com.br/vagas-empregos-em-sao-paulo-sp/{keywords}'
         urls.append(_trabalha_link)
         
+        # gupu
+        _gupu_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
+        urls.append(_trabalha_link)
         
     timeout_event = Event()
     extraction_completed = Event()
@@ -326,7 +335,7 @@ def get_jobs(user_params: JobsParams):
 
     def perform_extraction():
         global result
-        result = extractJobs(url_list, plavra, timeout_event)
+        result = extractJobs(url_list, plavra, timeout_event, cards_offset)
         extraction_completed.set()  # Signal that extraction is complete
 
 
@@ -389,7 +398,7 @@ if __name__ == "__main__":
     extraction_completed = Event()
   
     def stop_extraction():
-        extraction_completed.wait(90)  # Wait for up to 90 seconds for extraction to complete
+        extraction_completed.wait(300)  # Wait for up to 90 seconds for extraction to complete
         timeout_event.set()
 
     def perform_extraction():

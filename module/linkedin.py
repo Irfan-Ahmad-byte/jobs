@@ -25,10 +25,11 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class LinkedIn:
-    def __init__(self, urls:list, palavras, timeout_event: Event):
+    def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
         self.urls = urls
         self.palavras = palavras
         self.timeout_event = timeout_event
+        self.card_num = card_num
         
     def get_job_cards(self, url):
         """
@@ -65,7 +66,9 @@ class LinkedIn:
                     cards = soup.find_all('li')
                 except:
                     ...
-        
+            if len(cards)>self.card_num:
+                return cards[0:self.card_num]
+                
         return cards
         
     
