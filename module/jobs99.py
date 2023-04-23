@@ -74,7 +74,7 @@ class Jobs99:
             if not '?page=' in url:
                 total_jobs_element = soup.find('span', {'id':"text-total-opportunities"})
                 if total_jobs_element:
-                    self.total_jobs = total_jobs_element.text.strip()
+                    self.total_jobs = int(total_jobs_element.text.strip())
             else:
                 self.total_pages = 1
                 
