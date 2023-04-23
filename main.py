@@ -291,7 +291,7 @@ def get_jobs(user_params: JobsParams):
     for title in titles:
         keywords = urllib.parse.quote(title)
 
-        # LinkedIn URL
+        '''# LinkedIn URL
         linkedin_link = f'https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}'
         if time_period:
             linkedin_link += time_period
@@ -320,9 +320,9 @@ def get_jobs(user_params: JobsParams):
             
         # trabalha
         _trabalha_link = f'https://www.trabalhabrasil.com.br/vagas-empregos-em-sao-paulo-sp/{keywords}'
-        urls.append(_trabalha_link)
+        urls.append(_trabalha_link)'''
         
-        # gupu
+        # gupy
         _gupu_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
         urls.append(_trabalha_link)
         
