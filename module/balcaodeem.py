@@ -52,7 +52,7 @@ class Balca:
             # get cards
       
             if cards_list:
-                cards.extend(cards_list.find_all('div', class_='panel-vaga'))
+                cards.extend(cards_list.find_all('div', class_='panel-vaga link-draw-vaga'))
                     
             if len(cards)>self.card_num:
                 return cards[0:self.card_num]
@@ -190,7 +190,7 @@ class Balca:
   
 
 if __name__ == '__main__':
-    WEBSITE_URL =[ 'https://www.balcaodeempregos.com.br/vagas-por-cargo/ajudante-restaurante?criterio=Ajudante+Restaurante&cidadeEstado=']
+    WEBSITE_URL =[ 'https://www.balcaodeempregos.com.br/vagas-por-cargo/recepcionista?criterio=Recepcionista&cidadeEstado=']
     
     plavra = [
   	'manter registros',

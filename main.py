@@ -296,7 +296,7 @@ def get_jobs(user_params: JobsParams):
         if time_period:
             linkedin_link += time_period
         linkedin_link += '&position=1&pageNum=0'
-        urls.append(linkedin_link)
+        urls.append(linkedin_link)'''
 
         # 99jobs URL
         _99jobs_link = f'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D={keywords}'
@@ -306,9 +306,9 @@ def get_jobs(user_params: JobsParams):
         if city:
             city_99jobs = urllib.parse.quote(city)
             _99jobs_link += f'&search%5Bcity%5D%5B%5D={city_99jobs}'
-        urls.append(_99jobs_link)'''
+        urls.append(_99jobs_link)
         
-        # infojobs URL
+        '''# infojobs URL
         _infojobs_link = f'https://www.infojobs.com.br/empregos.aspx?palabra={keywords}'
         if city:
             _infojobs_location_id = get_location(city)
@@ -319,7 +319,7 @@ def get_jobs(user_params: JobsParams):
         else:
             urls.append(_infojobs_link)
             
-        '''# trabalha
+        # trabalha
         _trabalha_link = f'https://www.trabalhabrasil.com.br/vagas-empregos-em-sao-paulo-sp/{keywords}'
         urls.append(_trabalha_link)
         
