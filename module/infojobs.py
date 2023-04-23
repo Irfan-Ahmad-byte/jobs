@@ -71,11 +71,11 @@ class Infojobs:
             soup = BeautifulSoup(html, "html.parser")
 
             if not '?page=' in url:
-                total_pages_element = int(soup.find('div', {'id':"resumeVacancies"})
+                total_pages_element = soup.find('div', {'id':"resumeVacancies"})
                 if total_pages_element:
                     total_pages_element = total_pages_element.find('div', class_='col-auto caption')
                     if total_pages_element:
-                        self.total_pages = .get_text().split()[-1])
+                        self.total_pages = int(total_pages_element.get_text().split()[-1])
             else:
                 self.total_pages = 1
             
