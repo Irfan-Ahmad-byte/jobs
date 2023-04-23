@@ -322,7 +322,7 @@ def get_jobs(user_params: JobsParams):
         _trabalha_link = f'https://www.trabalhabrasil.com.br/vagas-empregos-em-sao-paulo-sp/{keywords}'
         urls.append(_trabalha_link)
         
-'''        # gupy
+        '''# gupy
         _gupy_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
         urls.append(_gupy_url)'''
         
