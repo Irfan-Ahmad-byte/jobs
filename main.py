@@ -300,12 +300,6 @@ def get_jobs(user_params: JobsParams):
 
         # 99jobs URL
         _99jobs_link = f'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D={keywords}'
-        if state:
-            state_99jobs = urllib.parse.quote(state)
-            _99jobs_link += f'&search%5Bstate%5D={state_99jobs}'
-        if city:
-            city_99jobs = urllib.parse.quote(city)
-            _99jobs_link += f'&search%5Bcity%5D%5B%5D={city_99jobs}'
         urls.append(_99jobs_link)
         
         '''# infojobs URL
