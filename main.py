@@ -318,7 +318,6 @@ def get_jobs(user_params: JobsParams):
         
         
     timeout_event = Event()
-    result = []
     extraction_completed = Event()
   
     def stop_extraction():
@@ -387,7 +386,6 @@ if __name__ == "__main__":
     ]
 
     timeout_event = Event()
-    result = []
     extraction_completed = Event()
   
     def stop_extraction():
