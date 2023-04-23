@@ -51,32 +51,54 @@ class Jobs99:
         self.timeout_event = timeout_event
         self.card_num = card_num
         
+        self.total_jobs = 0
+        self.total_pages = 1
+        
+        self.page_index = 1
+        
+        self.cards = []
+        
     def get_job_cards(self, url):
         if self.timeout_event.is_set():
             return []
             
         print('===========>Getting cards for: ', url)
         res = requests.get(url, timeout=3)
-        cards = []
         if res.status_code==200:
             time.sleep(.5)
             html = res.content
       
             # Parse the HTML content using BeautifulSoup library (or any other method)
             soup = BeautifulSoup(html, "html.parser")
-
+            
+            if not '?page=' in url:
+                total_jobs_element = soup.find('span', {'id'="text-total-opportunities"})
+                if total_jobs_element:
+                    self.total_jobs = total_jobs_element.text.strip()
+            else:
+                self.total_pages = 1
+                
+            self.total_pages = self.total_jobs / 20
+            
             # Find all the elements with class name 'base-card' which contain each job listing
             cards_list = soup.find('div', class_="opportunities-list")
-      
             # get cards
-      
             if cards_list:
-                cards = cards_list.find_all('a', class_='opportunity-card')
+                self.cards = cards_list.find_all('a', class_='opportunity-card')
+            
+            if self.total_pages> 1:
+                numbered_pages = []
+                for i in range(2, self.total_pages):
+                    numbered_pages.append(f'https://99jobs.com/opportunities/filtered_search/search_opportunities?page={i}&search%5Bterm%5D={url.split("=")[-1]}&')
+                    
+                with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
+                    cards = executor.map(self.get_job_cards, numbered_pages)
+
                 
             if len(cards)>self.card_num:
-                return cards[0:self.card_num]
+                return self.cards[0:self.card_num]
         
-        return cards
+        return self.cards
     
     
     def get_job_info(self, card):
