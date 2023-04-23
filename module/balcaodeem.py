@@ -1,7 +1,6 @@
 """
-https://www.balcaodeempregos.com.br/
+https://www.infojobs.com.br/
 """
-
 
 
 # Import FastAPI and requests libraries
