@@ -35,6 +35,9 @@ from module.docsim import rate_text, normalize_text
 
 from module.jobs99 import Jobs99
 from module.linkedin import LinkedIn
+from module.trabalha import Trabalha
+from module.infojobs import Infojobs, get_location
+from module.gupy import Gupy
 
 from itertools import repeat
 from math import sqrt
@@ -123,12 +126,27 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event):
   sites = {}
   sites['99jobs'] = []
   sites['linkedin'] = []
+  sites['trabalha'] = []
+  sites['infojobs'] = []
+  sites['gupy'] = []
   
   for url in urls:
     if '99jobs' in url:
       sites['99jobs'].append(url)
+      
     elif 'linkedin' in url:
       sites['linkedin'].append(url)
+      
+    elif 'trabalha' in url:
+      sites['trabalha'].append(url)
+      
+    elif 'infojobs' in url:
+      sites['infojobs'].append(url)
+      
+    elif 'gupy' in url:
+      sites['gupy'].append(url)
+    
+      
       
   jobs = []
   
@@ -139,10 +157,16 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event):
       constructors.append(Jobs99(value, plavras, timeout_event))
     elif key == 'linkedin':
       constructors.append(LinkedIn(value, plavras, timeout_event))
+    elif key == 'trabalha':
+      constructors.append(Trabalha(value, plavras, timeout_event))
+    elif key == 'infojobs':
+      constructors.append(Infojobs(value, plavras, timeout_event))
+    elif key == 'gupy':
+      constructors.append(Gupy(value, plavras, timeout_event))
       
   totla_jobs = 0
   job_data_list = []
-  with ThreadPoolExecutor(max_workers=10) as executor:
+  with ThreadPoolExecutor(max_workers=4) as executor:
     job_data = executor.map(execute_constructor, constructors)
     
     job_data_list= list(job_data)
@@ -260,7 +284,6 @@ def get_jobs(user_params: JobsParams):
 
     for title in titles:
         keywords = urllib.parse.quote(title)
-        keywords_99jobs = urllib.parse.quote(title)
 
         # LinkedIn URL
         linkedin_link = f'https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}'
@@ -278,6 +301,21 @@ def get_jobs(user_params: JobsParams):
             city_99jobs = urllib.parse.quote(city)
             _99jobs_link += f'&search%5Bcity%5D%5B%5D={city_99jobs}'
         urls.append(_99jobs_link)
+        
+        # infojobs URL
+        _infojobs_link = f'https://www.infojobs.com.br/empregos.aspx?palabra={keywords}'
+        if city:
+            _infojobs_location_id = get_location(city)
+            for loc in _infojobs_location_id:
+                _infojobs_link+= f'&poblacion={loc}'
+                urls.append(_infojobs_link)
+        else:
+            urls.append(_infojobs_link)
+            
+        # trabalha
+        _trabalha_link = f'https://www.trabalhabrasil.com.br/vagas-empregos-em-sao-paulo-sp/{keywords}'
+        urls.append(_trabalha_link)
+        
         
     timeout_event = Event()
 
@@ -326,15 +364,21 @@ if __name__ == "__main__":
     start_time = time.time()
     url_list = [
         'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D=Engenharia',
+        'https://www.infojobs.com.br/empregos.aspx?palabra=Auxiliar+de+produ%C3%A7%C3%A3o&poblacion=5209591',
+    'https://www.infojobs.com.br/vagas-de-emprego-auxiliar+de+produ%C3%A7%C3%A3o-em-porto-alegre,-rs.aspx?page=2',
+    'https://www.trabalhabrasil.com.br/vagas-empregos-em-sao-paulo-sp/software%20engineer',
         'https://www.linkedin.com/jobs/search?keywords=Engenharia%20Ambiental&location=Brazil&f_TPR=r86400&position=1&pageNum=0',
         'https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=software-engineer&start=225&location=Brazil',
-        
+      'https://portal.api.gupy.io/api/v1/jobs?jobName=python%20developer&limit=50&offset=1',
+    'https://portal.api.gupy.io/api/v1/jobs?jobName=software%20engineer&limit=50&offset=1',
+    'https://portal.api.gupy.io/api/v1/jobs?jobName=data%20entery%20operator&limit=50&offset=1',
+    'https://portal.api.gupy.io/api/v1/jobs?jobName=data%20scientist&limit=50&offset=1',  
     ]
 
     timeout_event = Event()
     # Start the timeout thread before calling the extractJobs function
     def stop_extraction():
-        time.sleep(90)
+        time.sleep(300)
         timeout_event.set()
 
     extraction_thread = Thread(target=stop_extraction)

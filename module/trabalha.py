@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from docsim import rate_text, normalize_text
+from module.docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
