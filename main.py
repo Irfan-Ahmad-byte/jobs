@@ -316,15 +316,15 @@ def get_jobs(user_params: JobsParams):
                 _infojobs_link+= f'&poblacion={loc}'
                 urls.append(_infojobs_link)
         else:
-            urls.append(_infojobs_link)
+            urls.append(_infojobs_link)'''
             
         # trabalha
         _trabalha_link = f'https://www.trabalhabrasil.com.br/vagas-empregos-em-sao-paulo-sp/{keywords}'
-        urls.append(_trabalha_link)'''
+        urls.append(_trabalha_link)
         
-        # gupy
+'''        # gupy
         _gupy_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
-        urls.append(_gupy_url)
+        urls.append(_gupy_url)'''
         
     timeout_event = Event()
     extraction_completed = Event()
