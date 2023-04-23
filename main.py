@@ -313,6 +313,7 @@ def get_jobs(user_params: JobsParams):
         if city:
             _infojobs_location_id = get_location(city)
             for loc in _infojobs_location_id:
+                _infojobs_link = f'https://www.infojobs.com.br/empregos.aspx?palabra={keywords}'
                 _infojobs_link+= f'&poblacion={loc}'
                 urls.append(_infojobs_link)
         else:
