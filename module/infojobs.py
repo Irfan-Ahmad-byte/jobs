@@ -262,7 +262,7 @@ if __name__ == '__main__':
     timeout_event = Event()
     # Start the timeout thread before calling the extractJobs function
     def stop_extraction():
-        time.sleep(220)
+        time.sleep(300)
         timeout_event.set()
 
     extraction_thread = Thread(target=stop_extraction)

@@ -4,7 +4,8 @@ https://99jobs.com/
 """
 
 '''
-URL = 'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D=Engenharia+Ambiental&search%5Bstate%5D=2&search%5Bcity%5D%5B%5D=Acrel%C3%A2ndia
+URL = 'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&
+search%5Bterm%5D=Engenharia+Ambiental&search%5Bstate%5D=2&search%5Bcity%5D%5B%5D=Acrel%C3%A2ndia
 '
 '''
 '''
@@ -24,7 +25,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from module.docsim import rate_text, normalize_text
+from docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -63,7 +64,7 @@ class Jobs99:
             return []
             
         print('===========>Getting cards for: ', url)
-        res = requests.get(url, timeout=3)
+        res = requests.get(url, headers=headers)
         if res.status_code==200:
             time.sleep(.5)
             html = res.content
@@ -74,17 +75,14 @@ class Jobs99:
             if not '?page=' in url:
                 total_jobs_element = soup.find('span', {'id':"text-total-opportunities"})
                 if total_jobs_element:
-                    self.total_jobs = int(round(total_jobs_element.text.strip()))
+                    self.total_jobs = int(round(float(total_jobs_element.text.strip())))
             else:
-                self.total_pages = 1
+                self.total_jobs = 1
                 
             self.total_pages = int(round(self.total_jobs / 20))
             
             # Find all the elements with class name 'base-card' which contain each job listing
-            cards_list = soup.find('div', class_="opportunities-list")
-            # get cards
-            if cards_list:
-                self.cards = cards_list.find_all('a', class_='opportunity-card')
+            self.cards.extend(soup.find_all('a', class_='opportunity-card'))
             
             if self.total_pages> 1:
                 numbered_pages = []
@@ -92,7 +90,7 @@ class Jobs99:
                     numbered_pages.append(f'https://99jobs.com/opportunities/filtered_search/search_opportunities?page={i}&search%5Bterm%5D={url.split("=")[-1]}&')
                     
                 with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
-                    self.cards = executor.map(self.get_job_cards, numbered_pages)
+                    cards = executor.map(self.get_job_cards, numbered_pages)
 
                 
             if len(self.cards)>self.card_num:
@@ -172,7 +170,11 @@ class Jobs99:
       
                 side_bar = soup.find('div', class_='details')
                 # job title
-                job_title = side_bar.find('h2').text.strip()
+                try:
+                    job_title = side_bar.find('h2').text.strip()
+                except:
+                    job_title = side_bar.find('h1').text.strip()
+                    
                 print(url, ': ', job_title)
       
                 # days
@@ -189,7 +191,13 @@ class Jobs99:
                 if descriptionDiv is not None:
                     description = descriptionDiv.text.strip()
                 else:
-                    description = 'no description specified'
+                    description_tags = ['p', 'div', 'span']
+                    description = ''
+                    for tag in description_tags:
+                        descriptions = soup.find_all(tag, text=re.compile(r'\b(?:responsibilities|requirements|qualifications)\b', re.IGNORECASE))
+                        if descriptions:
+                            description = ' '.join([desc.get_text() for desc in descriptions])
+                            break
 
                 # Add the complete description to result dictionary
                 description_page_info['description'] = normalize_text(description)
@@ -258,7 +266,7 @@ class Jobs99:
   
 
 if __name__ == '__main__':
-    WEBSITE_URL = 'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D=software%20engineer&search%5Bstate%5D=8&search%5Bcity%5D%5B%5D=Bras%C3%ADlia'
+    WEBSITE_URL = 'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D=software%20engineer'
     
     plavra = [
   	'manter registros',
