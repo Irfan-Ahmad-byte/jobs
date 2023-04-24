@@ -92,10 +92,10 @@ class Jobs99:
                     numbered_pages.append(f'https://99jobs.com/opportunities/filtered_search/search_opportunities?page={i}&search%5Bterm%5D={url.split("=")[-1]}&')
                     
                 with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
-                    cards = executor.map(self.get_job_cards, numbered_pages)
+                    self.cards = executor.map(self.get_job_cards, numbered_pages)
 
                 
-            if len(cards)>self.card_num:
+            if len(self.cards)>self.card_num:
                 return self.cards[0:self.card_num]
         
         return self.cards
@@ -158,6 +158,7 @@ class Jobs99:
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
         try:
+            time.sleep(2)
             res = requests.get(url, headers=headers, timeout=3)
             if res.status_code == 200:
                 description_page_info = {}
@@ -279,7 +280,7 @@ if __name__ == '__main__':
     timeout_event = Event()
     # Start the timeout thread before calling the extractJobs function
     def stop_extraction():
-        time.sleep(3)
+        time.sleep(20)
         timeout_event.set()
 
     extraction_thread = Thread(target=stop_extraction)
