@@ -158,7 +158,6 @@ class Jobs99:
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
         try:
-            time.sleep(2)
             res = requests.get(url, headers=headers, timeout=3)
             if res.status_code == 200:
                 description_page_info = {}
