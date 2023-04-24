@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from module.docsim import rate_text, normalize_text
+from docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -40,6 +40,7 @@ class Balca:
         print('===========>Getting cards for: ', url)
         res = requests.get(url, headers=headers)
         cards = []
+        print('Balca status: ', res.status_code)
         if res.status_code==200:
             time.sleep(.5)
             html = res.content
@@ -49,10 +50,11 @@ class Balca:
             
             # Find all the elements with class name 'base-card' which contain each job listing
             cards_list = soup.find('fieldset')
+            print('fieldset: ', cards_list)
             # get cards
       
             if cards_list:
-                cards.extend(cards_list.find_all('div', class_='panel-vaga link-draw-vaga'))
+                cards.extend(cards_list.find_all('div', class_='panel-body panel-vaga link-draw-vaga'))
                     
             if len(cards)>self.card_num:
                 return cards[0:self.card_num]
@@ -66,6 +68,9 @@ class Balca:
             return {}
 
         # Get the text content and href attribute of the title link element
+        job_id = card['id-vega']
+        
+        job_secs = card.find_all('div', recursive=False)
         job_title_element = card.find('div', class_='col-xs-12 col-sm-8 col-lg-9 bold font-16 text-dark-gray no-padding-left no-padding-right').get_text().strip()
         if job_title_element is None:
             print('============== FAILED CARD ================')

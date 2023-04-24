@@ -61,7 +61,7 @@ class Jobs99:
         
     def get_job_cards(self, url):
         if self.timeout_event.is_set():
-            return []
+            return self.cards
             
         print('===========>Getting cards for: ', url)
         res = requests.get(url, headers=headers)
@@ -172,13 +172,7 @@ class Jobs99:
                 if descriptionDiv is not None:
                     description = descriptionDiv.text.strip()
                 else:
-                    description_tags = ['p', 'div', 'span']
-                    description = ''
-                    for tag in description_tags:
-                        descriptions = soup.find_all(tag, text=re.compile(r'\b(?:responsibilities|requirements|qualifications)\b', re.IGNORECASE))
-                        if descriptions:
-                            description = ' '.join([desc.get_text() for desc in descriptions])
-                            break
+                    return None
 
                 # Add the complete description to result dictionary
                 description_page_info['description'] = normalize_text(description)
