@@ -68,44 +68,54 @@ class Balca:
             return {}
 
         # Get the text content and href attribute of the title link element
-        job_id = card['id-vega']
+        job_id = card['id-vaga']
         
         job_secs = card.find_all('div', recursive=False)
-        job_title_element = card.find('div', class_='col-xs-12 col-sm-8 col-lg-9 bold font-16 text-dark-gray no-padding-left no-padding-right').get_text().strip()
-        if job_title_element is None:
-            print('============== FAILED CARD ================')
-            print(card)
-            print('============ FAILED CARD END ==============')
-            return None
-        job_title = job_title_element.get_text(strip=True) if job_title_element else "Not specified"
-
-        day_posted = '---'
-
-        location = card.find('div', class_='col-xs-12 no-padding-left italic text-gray with-small-padding-bottom').get_text().strip()
-        company_name = card.find('strong', string='Empresa: ').find_next_sibling('span').get_text().strip()
+        job_title_section = job_secs[0]
+        job_location_section = job_secs[1]
+        job_detail_section = job_secs[3]
+                
+        job_title_element = job_title_section.find_all('div', recursive=False)
         
-        job_id = card['id-vaga']
+        job_title = job_title_element[0].text.strip()
 
-        job_url = f"https://www.balcaodeempregos.com.br/Vaga/GetVagaById"
+        day_posted = job_title_element[1].find('strong').text.strip()
 
-        job_desc = self.extractDescription(job_url, job_id=job_id)
+        location = ' '.join(job_location_section.text.strip().split(' ')[1:])
+
+        company_name = job_detail_section.find('div').find_all('strong', recursive=False)[0].find_next_sibling('span').text.strip()
+
+        base_url = 'https://www.balcaodeempregos.com.br'
+        
+        description_url_element = job_detail_section.find('input')
+        if description_url_element:
+            onclick_attr = description_url_element.parent['onclick']
+            url_match = re.search(r"src = '(.+?)'", onclick_attr)
+            if url_match:
+                description_url = urljoin(base_url, url_match.group(1))
+        
+        job_response_url = f"https://www.balcaodeempregos.com.br/Vaga/GetVagaById"
+
+        job_desc = self.extractDescription(job_response_url, job_id=job_id)
 
 
         rating = 0
         if job_desc is not None:
             rating = rate_text(normalize_text(job_desc), self.palavras)
 
-        job = {
+            job = {
         "jobTitle": normalize_text(job_title),
         "companyName": normalize_text(company_name),
         "dayPosted": day_posted,
-        "jobURL": job_url,
+        "jobURL": description_url,
         'rating': rating,
         'location': normalize_text(location)
-        }
+            }
 
-        print('JOB: ', json.dumps(job, indent=2))
-        return job
+            print('JOB: ', json.dumps(job, indent=2))
+            return job
+        else:
+            None
 
 
     def extractDescription(self, url, job_id):

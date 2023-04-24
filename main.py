@@ -325,7 +325,7 @@ def get_jobs(user_params: JobsParams):
     extraction_completed = Event()
   
     def stop_extraction():
-        extraction_completed.wait(90)  # Wait for up to 90 seconds for extraction to complete
+        extraction_completed.wait(85)  # Wait for up to 90 seconds for extraction to complete
         timeout_event.set()
 
     def perform_extraction():
