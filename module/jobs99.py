@@ -72,28 +72,8 @@ class Jobs99:
             # Parse the HTML content using BeautifulSoup library (or any other method)
             soup = BeautifulSoup(html, "html.parser")
             
-            if not '?page=' in url:
-                total_jobs_element = soup.find('span', {'id':"text-total-opportunities"})
-                if total_jobs_element:
-                    self.total_jobs = int(round(float(total_jobs_element.text.strip())))
-            else:
-                self.total_jobs = 1
-                
-            self.total_pages = int(round(self.total_jobs / 20))
-            if self.total_pages > 5:
-                self.total_pages = 5
-            
             # Find all the elements with class name 'base-card' which contain each job listing
             self.cards.extend(soup.find_all('a', class_='opportunity-card'))
-            
-            if self.total_pages> 1:
-                numbered_pages = []
-                for i in range(2, self.total_pages):
-                    numbered_pages.append(f'https://99jobs.com/opportunities/filtered_search/search_opportunities?page={i}&search%5Bterm%5D={url.split("=")[-1]}&')
-                    
-                with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
-                    cards = executor.map(self.get_job_cards, numbered_pages)
-
                 
             if len(self.cards)>self.card_num:
                 return self.cards[0:self.card_num]
