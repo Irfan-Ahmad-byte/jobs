@@ -2,11 +2,11 @@
 https://www.balcaodeempregos.com.br/
 """
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, element
 from typing import Optional, List, Union
 
 from woocommerce import API
-from docsim import rate_text, normalize_text
+from module.docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -87,12 +87,11 @@ class Balca:
 
         base_url = 'https://www.balcaodeempregos.com.br'
         
-        description_url_element = job_detail_section.find('input')
-        if description_url_element:
-            onclick_attr = description_url_element.parent['onclick']
-            url_match = re.search(r"src = '(.+?)'", onclick_attr)
-            if url_match:
-                description_url = urljoin(base_url, url_match.group(1))
+        comment = job_detail_section.find(text=lambda x: isinstance(x, element.Comment))
+        href_match = re.search(r'href="(.+?)"', comment)
+        if href_match:
+            href = href_match.group(1)
+            description_url = base_url+href
         
         job_response_url = f"https://www.balcaodeempregos.com.br/Vaga/GetVagaById"
 

@@ -38,6 +38,7 @@ from module.linkedin import LinkedIn
 from module.trabalha import Trabalha
 from module.infojobs import Infojobs, get_location
 from module.gupy import Gupy
+from module.balcaodeem import Balca
 
 from itertools import repeat
 from math import sqrt
@@ -130,6 +131,7 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
   sites['trabalha'] = []
   sites['infojobs'] = []
   sites['gupy'] = []
+  sites['balca'] = []
   
   for url in urls:
     if '99jobs' in url:
@@ -146,6 +148,9 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
       
     elif 'gupy' in url:
       sites['gupy'].append(url)
+      
+    elif 'balcaodeempregos.com' in url:
+      sites['balca'].append(url)
     
       
       
@@ -164,6 +169,8 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
       constructors.append(Infojobs(value, plavras, timeout_event, card_num))
     elif key == 'gupy':
       constructors.append(Gupy(value, plavras, timeout_event, card_num))
+    elif key == 'balca':
+      constructors.append(Balca(value, plavras, timeout_event, card_num))
       
   totla_jobs = 0
   job_data_list = []
@@ -321,11 +328,17 @@ def get_jobs(user_params: JobsParams):
         _gupy_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
         urls.append(_gupy_url)
         
+        # balca
+        _balca_url = f'https://www.balcaodeempregos.com.br/vagas-por-cargo/{title.lower().replace(' ', '-')}?criterio={keywords}&cidadeEstado='
+        if city:
+            _balca_url += urllib.parse.quote(city)
+        urls.append(_balca_url)
+        
     timeout_event = Event()
     extraction_completed = Event()
   
     def stop_extraction():
-        extraction_completed.wait(85)  # Wait for up to 90 seconds for extraction to complete
+        extraction_completed.wait(80)  # Wait for up to 90 seconds for extraction to complete
         timeout_event.set()
 
     def perform_extraction():
@@ -386,7 +399,8 @@ if __name__ == "__main__":
       'https://portal.api.gupy.io/api/v1/jobs?jobName=python%20developer&limit=50&offset=1',
     'https://portal.api.gupy.io/api/v1/jobs?jobName=software%20engineer&limit=50&offset=1',
     'https://portal.api.gupy.io/api/v1/jobs?jobName=data%20entery%20operator&limit=50&offset=1',
-    'https://portal.api.gupy.io/api/v1/jobs?jobName=data%20scientist&limit=50&offset=1',  
+    'https://portal.api.gupy.io/api/v1/jobs?jobName=data%20scientist&limit=50&offset=1',
+    'https://www.balcaodeempregos.com.br/vagas-por-cargo/recepcionista?criterio=Recepcionista&cidadeEstado='
     ]
 
     timeout_event = Event()
