@@ -71,7 +71,7 @@ class Gupy:
         location = f"{card['city']}, {card['state']}, {card['country']}"
         job_name = card["name"]
         description = card["description"]
-        posted_date = card["publishedDate"].split('T')
+        posted_date = card["publishedDate"].split('T')[0]
         job_url = card["jobUrl"]
 
         rating = 0
