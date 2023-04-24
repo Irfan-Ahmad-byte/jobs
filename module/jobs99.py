@@ -80,8 +80,8 @@ class Jobs99:
                 self.total_jobs = 1
                 
             self.total_pages = int(round(self.total_jobs / 20))
-            if self.total_pages >= 10:
-                self.total_pages = 8
+            if self.total_pages > 5:
+                self.total_pages = 5
             
             # Find all the elements with class name 'base-card' which contain each job listing
             self.cards.extend(soup.find_all('a', class_='opportunity-card'))
@@ -175,7 +175,7 @@ class Jobs99:
                 try:
                     job_title = side_bar.find('h2').text.strip()
                 except:
-                    job_title = side_bar.find('h1').text.strip()
+                    job_title = soup.find('h1').text.strip()
                     
                 print(url, ': ', job_title)
       
