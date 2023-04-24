@@ -80,6 +80,8 @@ class Jobs99:
                 self.total_jobs = 1
                 
             self.total_pages = int(round(self.total_jobs / 20))
+            if self.total_pages >= 10:
+                self.total_pages = 8
             
             # Find all the elements with class name 'base-card' which contain each job listing
             self.cards.extend(soup.find_all('a', class_='opportunity-card'))
