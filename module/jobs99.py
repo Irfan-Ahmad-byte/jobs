@@ -74,11 +74,11 @@ class Jobs99:
             if not '?page=' in url:
                 total_jobs_element = soup.find('span', {'id':"text-total-opportunities"})
                 if total_jobs_element:
-                    self.total_jobs = int(total_jobs_element.text.strip())
+                    self.total_jobs = int(round(total_jobs_element.text.strip()))
             else:
                 self.total_pages = 1
                 
-            self.total_pages = self.total_jobs / 20
+            self.total_pages = int(round(self.total_jobs / 20))
             
             # Find all the elements with class name 'base-card' which contain each job listing
             cards_list = soup.find('div', class_="opportunities-list")
