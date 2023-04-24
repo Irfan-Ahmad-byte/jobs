@@ -291,18 +291,18 @@ def get_jobs(user_params: JobsParams):
     for title in titles:
         keywords = urllib.parse.quote(title)
 
-        '''# LinkedIn URL
+        # LinkedIn URL
         linkedin_link = f'https://www.linkedin.com/jobs/search?keywords={keywords}&location={location}'
         if time_period:
             linkedin_link += time_period
         linkedin_link += '&position=1&pageNum=0'
-        urls.append(linkedin_link)'''
+        urls.append(linkedin_link)
 
         # 99jobs URL
         _99jobs_link = f'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&search%5Bterm%5D={keywords}'
         urls.append(_99jobs_link)
         
-        '''# infojobs URL
+        # infojobs URL
         _infojobs_link = f'https://www.infojobs.com.br/empregos.aspx?palabra={keywords}'
         if city:
             _infojobs_location_id = get_location(city)
@@ -319,7 +319,7 @@ def get_jobs(user_params: JobsParams):
         
         # gupy
         _gupy_url = f'https://portal.api.gupy.io/api/v1/jobs?jobName={keywords}&limit=50&offset=1'
-        urls.append(_gupy_url)'''
+        urls.append(_gupy_url)
         
     timeout_event = Event()
     extraction_completed = Event()
