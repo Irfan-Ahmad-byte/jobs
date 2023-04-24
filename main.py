@@ -329,7 +329,8 @@ def get_jobs(user_params: JobsParams):
         urls.append(_gupy_url)
         
         # balca
-        _balca_url = f'https://www.balcaodeempregos.com.br/vagas-por-cargo/{title.lower().replace(' ', '-')}?criterio={keywords}&cidadeEstado='
+        _balca_base = title.lower().replace(' ', '-')
+        _balca_url = f'https://www.balcaodeempregos.com.br/vagas-por-cargo/{_balca_base}?criterio={keywords}&cidadeEstado='
         if city:
             _balca_url += urllib.parse.quote(city)
         urls.append(_balca_url)
