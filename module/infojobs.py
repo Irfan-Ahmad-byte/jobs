@@ -87,6 +87,8 @@ class Infojobs:
                 self.cards.extend(cards_list.find_all('div', class_='card'))
             
             if self.total_pages > 1:
+                if self.total_pages > 10:
+                    self.total_pages = 10
                 numbered_pages = []
                 for i in range(2, self.total_pages):
                     numbered_pages.append(f'https://www.infojobs.com.br/vagas-de-emprego-{self.job_keyword}-em-porto-alegre,-rs.aspx?page={i}')
