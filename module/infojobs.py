@@ -87,8 +87,6 @@ class Infojobs:
                 self.cards.extend(cards_list.find_all('div', class_='card'))
             
             if self.total_pages > 1:
-                if self.total_pages > 10:
-                    self.total_pages = 10
                 numbered_pages = []
                 for i in range(2, self.total_pages):
                     numbered_pages.append(f'https://www.infojobs.com.br/vagas-de-emprego-{self.job_keyword}-em-porto-alegre,-rs.aspx?page={i}')
@@ -211,16 +209,7 @@ class Infojobs:
                 if self.timeout_event.is_set():
                     break
                 if len(card)>0:
-                    root = sqrt(len(card))
-                    if root >=1:
-                        if root > 10:
-                            workers = round(sqrt(len(card)))
-                        else:
-                            workers = len(card)
-                    else:
-                        workers = 1
-                
-                    with ThreadPoolExecutor(max_workers=workers) as executor:
+                    with ThreadPoolExecutor(max_workers=len(card)) as executor:
                         job_data = executor.map(self.get_job_info, card)
       
                     jobs_data_list.extend(list(job_data))

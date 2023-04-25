@@ -172,7 +172,7 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
     elif key == 'balca':
       constructors.append(Balca(value, plavras, timeout_event, card_num))
       
-  totla_jobs = 0
+  total_jobs = 0
   job_data_list = []
   with ThreadPoolExecutor(max_workers=10) as executor:
     job_data = executor.map(execute_constructor, constructors)
@@ -180,11 +180,14 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
     job_data_list= list(job_data)
     
   for jb in job_data_list:
-    totla_jobs+= jb[1]
+    total_jobs+= jb[1]
     jobs.extend(jb[0])
     
   random.shuffle(jobs)
-  return [jobs, totla_jobs]
+  
+  if timeout_event.is_set():
+    return [jobs, total_jobs]
+  return [jobs, total_jobs]
   
    
 #@app.post("/search_customer/")

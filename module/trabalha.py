@@ -165,16 +165,7 @@ class Trabalha:
                 if self.timeout_event.is_set():
                     break
                 if len(card)>0:
-                    root = sqrt(len(card))
-                    if root >=1:
-                        if root > 10:
-                            workers = round(sqrt(len(card)))
-                        else:
-                            workers = len(card)
-                    else:
-                        workers = 1
-                
-                    with ThreadPoolExecutor(max_workers=workers) as executor:
+                    with ThreadPoolExecutor(max_workers=len(card)) as executor:
                         job_data = executor.map(self.get_job_info, card)
       
                     jobs_data_list.extend(list(job_data))
