@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from module.docsim import rate_text, normalize_text
+from docsim import rate_text, normalize_text
 from itertools import repeat
 from math import sqrt
 
@@ -46,6 +46,7 @@ class Indeed:
             return []
         print('===========>Getting cards for: ', url)
         
+        time.sleep(random.uniform(1,5))
         res = requests.get(url)
         cards = []
         if res.status_code==200:
@@ -68,6 +69,8 @@ class Indeed:
                     ...
             if len(cards)>self.card_num:
                 return cards[0:self.card_num]
+        else:
+            print('status returned: ', res.status_code)
                 
         return cards
         
@@ -158,7 +161,7 @@ class Indeed:
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
         try:
-          time.sleep(3)
+          time.sleep(random.uniform(1,3))
           res = requests.get(url, headers=headers, timeout=3)
           if res.status_code == 200:
             html = res.content
@@ -255,8 +258,8 @@ if __name__ == '__main__':
   try:
     start_time = time.time()
     url_list = [
-        'https://br.indeed.com/jobs?q=software+engineer&l=Rio+Branco%2C+AC',
-        'https://br.indeed.com/jobs?q=software+engineer'
+        'https://br.indeed.com/jobs?q=software+engineer&l=Rio+Branco%2C+AC&vjk=8a2f88b3be1d9e78',
+        'https://br.indeed.com/jobs?q=software+engineer&l=&vjk=82eca8fdfb93d010'
     ]
 
     timeout_event = Event()
