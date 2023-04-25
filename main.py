@@ -184,6 +184,10 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
     jobs.extend(jb[0])
     
   random.shuffle(jobs)
+
+  if self.timeout_event.is_set():
+    return [jobs, total_jobs]
+    
   return [jobs, total_jobs]
   
    
