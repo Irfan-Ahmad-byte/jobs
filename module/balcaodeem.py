@@ -33,14 +33,15 @@ class Balca:
         self.timeout_event = timeout_event
         self.card_num = card_num
         
+        self.total_pages = 1
+        self.cards = []
+        
     def get_job_cards(self, url):
         if self.timeout_event.is_set():
             return []
             
         print('===========>Getting cards for: ', url)
         res = requests.get(url, headers=headers)
-        cards = []
-        print('Balca status: ', res.status_code)
         if res.status_code==200:
             time.sleep(.5)
             html = res.content
@@ -48,19 +49,36 @@ class Balca:
             # Parse the HTML content using BeautifulSoup library (or any other method)
             soup = BeautifulSoup(html, "html.parser")
             
+            if '?pagina=' not in url:
+                total_pages_element = soup.find('ul', class_='pagination')
+                if total_pages_element:
+                    self.total_pages = len(total_pages_element.find_all('li'))
+            else:
+                self.total_pages = 1
+
             # Find all the elements with class name 'base-card' which contain each job listing
             cards_list = soup.find('fieldset')
-            print('fieldset: ', cards_list)
             # get cards
       
             if cards_list:
-                cards.extend(cards_list.find_all('div', class_='panel-body panel-vaga link-draw-vaga'))
-                    
-            if len(cards)>self.card_num:
-                return cards[0:self.card_num]
-            return cards
+                self.cards.extend(cards_list.find_all('div', class_='panel-body panel-vaga link-draw-vaga'))
+                                    
+            if self.total_pages > 1:
+                if self.total_pages > 5:
+                    self.total_pages = 5
+                numbered_pages = []
+                for i in range(2, self.total_pages):
+                    numbered_pages.append(url.replace('?', f'?pagina={i}&'))
+            
+                with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
+                    cards = executor.map(self.get_job_cards, numbered_pages)
+
+            if len(self.cards)>self.card_num:
+                return self.cards[0:self.card_num]
+                
+            return self.cards
         
-        return cards
+        return self.cards
     
     
     def get_job_info(self, card):
@@ -87,7 +105,7 @@ class Balca:
 
         base_url = 'https://www.balcaodeempregos.com.br'
         
-        comment = job_detail_section.find(text=lambda x: isinstance(x, element.Comment))
+        comment = job_detail_section.find(string=lambda x: isinstance(x, element.Comment))
         href_match = re.search(r'href="(.+?)"', comment)
         if href_match:
             href = href_match.group(1)
