@@ -24,7 +24,7 @@ import unicodedata
 requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
-class LinkedIn:
+class Indeed:
     def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
         self.urls = urls
         self.palavras = palavras
@@ -56,7 +56,7 @@ class LinkedIn:
             soup = BeautifulSoup(html, "html.parser")
 
             # Find all the elements with class name 'base-card' which contain each job listing
-            cards_ul = soup.find('ul', class_="jobs-search__results-list")
+            cards_ul = soup.find('ul', class_="jobsearch-ResultsList")
         
         
             if cards_ul:
@@ -88,14 +88,18 @@ class LinkedIn:
             return {}
 
         # Get the text content and href attribute of the title link element
-        jobTitle = card.find("h3", class_="base-search-card__title").text.strip()
+        jobTitle_element = card.find("h2", class_="jobTitle")
         
         if not jobTitle:
             return
-          
-        jobURL = card.find("a")['href']
+        else:
+            jobTitle = jobTitle_element.text.strip()
+            
+        data_jk = jobTitle_element.find("a")['data-jk']
+        data_tk = jobTitle_element.find("a")['data-mobtk']
+        jobURL = f'https://br.indeed.com/viewjob?jk={data_jk}&tk={data_tk}&from=serp&vjs=3'
         try:
-            location = card.find("span", class_='job-search-card__location').text.strip()
+            location = card.find("div", class_='companyLocation').text.strip()
         except:
             location = 'location not given'
 
@@ -103,13 +107,13 @@ class LinkedIn:
         
         # Get the text content of the company link element
         try:
-            companyName = card.find("h4", class_="base-search-card__subtitle").text.strip()
+            companyName = card.find("span", class_='companyName').text.strip()
         except:
             companyName = 'Not specified'
 
         # Get the text content of the date span element
         try:
-            dayPosted = card.find("time").text.strip()
+            dayPosted = card.find("span", class_='date').text.strip()
         except:
             dayPosted = False
           

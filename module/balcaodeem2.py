@@ -33,7 +33,6 @@ class Balca:
         self.timeout_event = timeout_event
         self.card_num = card_num
         
-        self.total_pages = 1
         self.cards = []
         
     def get_job_cards(self, url):
@@ -41,20 +40,13 @@ class Balca:
             return []
             
         print('===========>Getting cards for: ', url)
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=3)
         if res.status_code==200:
             time.sleep(.5)
             html = res.content
       
             # Parse the HTML content using BeautifulSoup library (or any other method)
             soup = BeautifulSoup(html, "html.parser")
-            
-            if '?pagina=' not in url:
-                total_pages_element = soup.find('ul', class_='pagination')
-                if total_pages_element:
-                    self.total_pages = len(total_pages_element.find_all('li'))
-            else:
-                self.total_pages = 1
 
             # Find all the elements with class name 'base-card' which contain each job listing
             cards_list = soup.find('fieldset')
@@ -62,16 +54,6 @@ class Balca:
       
             if cards_list:
                 self.cards.extend(cards_list.find_all('div', class_='panel-body panel-vaga link-draw-vaga'))
-                                    
-            if self.total_pages > 1:
-                if self.total_pages > 5:
-                    self.total_pages = 5
-                numbered_pages = []
-                for i in range(2, self.total_pages):
-                    numbered_pages.append(url.replace('?', f'?pagina={i}&'))
-            
-                with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
-                    cards = executor.map(self.get_job_cards, numbered_pages)
 
             if len(self.cards)>self.card_num:
                 return self.cards[0:self.card_num]
@@ -147,12 +129,13 @@ class Balca:
         """
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
-        
+        if self.timeout_event.is_set():
+            return None
         try:
             data = {
                 "id": job_id
             }
-            res = requests.post(url, headers=headers, data=data)
+            res = requests.post(url, headers=headers, data=data, timeout=3)
             if res.status_code == 200:
                 description_page_info = {}
                 html = res.json()
