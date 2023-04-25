@@ -270,6 +270,7 @@ def get_jobs(user_params: JobsParams):
     Returns:
         fastapi.responses.JSONResponse: A JSON response containing a list of job dictionaries and the total number of cards.
     """
+    start_time = time.time()
 
     titles = user_params.titles
     plavra = user_params.plavra
@@ -360,7 +361,10 @@ def get_jobs(user_params: JobsParams):
     extraction_thread.join()  # Wait for extraction_thread to finish
     timeout_thread.join()  # Wait for timeout_thread to finish
 
+    elapsed_time = time.time() - start_time
+    
     print('REQUESTED URIs: ', urls)
+    print(f"Time taken to extract job description: {elapsed_time:.2f} seconds")
     return JSONResponse(content=result)
 
 
