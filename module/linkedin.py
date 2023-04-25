@@ -113,20 +113,21 @@ class LinkedIn:
         except:
             dayPosted = False
           
-        rating = rate_text(normalize_text(jobDesc), self.palavras)
+        if jobDesc:
+            rating = rate_text(normalize_text(jobDesc), self.palavras)
               
-        job = {
+            job = {
                 "jobTitle": jobTitle,
                 "companyName": companyName,
                 "dayPosted": dayPosted,
                 "jobURL": jobURL,
                 'rating': rating,
                 'location': location
-            }
+                }
             
-        print('JOB: ', job)
+            print('JOB: ', job)
             # Create a dictionary with all these information and append it to results list 
-        return job
+            return job
 
 
     def extractDescription(self, url):
@@ -139,8 +140,10 @@ class LinkedIn:
           Returns:
               dict: A dictionary containing the job description and location.
         """
+        if self.timeout_event.is_set():
+            return None
         
-        description = ''
+        description = None
         # Create an empty dictionary to store the result
 
         # Fetch the HTML content from the URL using requests library (or any other method)
@@ -162,12 +165,9 @@ class LinkedIn:
             time.sleep(0.5)
             # Get the text content of the element
             if descriptionDiv is not None:
-              description = descriptionDiv.text.strip()
+              description = normalize_text(descriptionDiv.text.strip())
             else:
-              description = 'no description specified'
-
-          # Add the complete description to result dictionary 
-          description = normalize_text(description)
+              description = None
 
         except Exception as e:
           print('Error while getting job description: %s, %s', str(e), url)

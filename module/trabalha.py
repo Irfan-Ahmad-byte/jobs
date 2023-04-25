@@ -115,6 +115,8 @@ class Trabalha:
         """
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
+        if self.timeout_event.is_set():
+            return None
         try:
             res = requests.get(url, headers=headers, timeout=3)
             if res.status_code == 200:

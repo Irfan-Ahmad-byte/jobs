@@ -129,7 +129,8 @@ class Balca:
         """
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
-        
+        if self.timeout_event.is_set():
+            return None
         try:
             data = {
                 "id": job_id
