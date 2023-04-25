@@ -39,6 +39,7 @@ from module.trabalha import Trabalha
 from module.infojobs import Infojobs, get_location
 from module.gupy import Gupy
 from module.balcaodeem import Balca
+from module.indeed import Indeed
 
 from itertools import repeat
 from math import sqrt
@@ -341,7 +342,7 @@ def get_jobs(user_params: JobsParams):
     extraction_completed = Event()
     
     def stop_extraction():
-        extraction_completed.wait(50)  # Wait for up to 90 seconds for extraction to complete
+        extraction_completed.wait(70)  # Wait for up to 90 seconds for extraction to complete
         timeout_event.set()
 
     def perform_extraction():

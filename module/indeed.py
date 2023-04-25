@@ -113,7 +113,12 @@ class Indeed:
 
         # Get the text content of the date span element
         try:
-            dayPosted = card.find("span", class_='date').text.strip()
+            dayPosted_element = card.find("span", class_='date')
+            extract_element = dayPosted_element.find("span", class_='visually-hidden')
+            if extract_element:
+                extract_element.extract()
+            
+            dayPosted = dayPosted_element.text.strip()
         except:
             dayPosted = False
           
@@ -162,7 +167,7 @@ class Indeed:
             soup = BeautifulSoup(html, "html.parser")
           
             # Find the element with class name 'description__text' which contains the job's description
-            descriptionDiv = soup.find("div", class_="show-more-less-html__markup")
+            descriptionDiv = soup.find("div", class_="jobDescriptionText")
             
             # Call the parseDescription function on this element and get the result dictionary
           
@@ -250,8 +255,8 @@ if __name__ == '__main__':
   try:
     start_time = time.time()
     url_list = [
-        'https://br.indeed.com/jobs?q=software+engineer&l=Rio+Branco%2C+AC&vjk=5f386d7e187f2d00',
-        'https://br.indeed.com/jobs?q=software+engineer&l=&vjk=e44b66795baeaf0f'
+        'https://br.indeed.com/jobs?q=software+engineer&l=Rio+Branco%2C+AC',
+        'https://br.indeed.com/jobs?q=software+engineer'
     ]
 
     timeout_event = Event()
@@ -263,8 +268,8 @@ if __name__ == '__main__':
     extraction_thread = Thread(target=stop_extraction)
     extraction_thread.start()
     
-    linked = LinkedIn(url_list, plavra, timeout_event)
-    jobs = linked.main()
+    indeed = Indeed(url_list, plavra, timeout_event)
+    jobs = indeed.main()
 
     elapsed_time = time.time() - start_time
 
