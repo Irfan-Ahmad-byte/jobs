@@ -71,8 +71,6 @@ class Infojobs:
             soup = BeautifulSoup(html, "html.parser")
 
             if not '?page=' in url:
-                if self.timeout_event.is_set():
-                    break
                 total_pages_element = soup.find('div', {'id':"resumeVacancies"})
                 if total_pages_element:
                     total_pages_element = total_pages_element.find('div', class_='col-auto caption')
@@ -93,6 +91,8 @@ class Infojobs:
                     self.total_pages = 10
                 numbered_pages = []
                 for i in range(2, self.total_pages):
+                    if self.timeout_event.is_set():
+                        break
                     numbered_pages.append(f'https://www.infojobs.com.br/vagas-de-emprego-{self.job_keyword}-em-porto-alegre,-rs.aspx?page={i}')
             
                 with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
