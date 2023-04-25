@@ -174,7 +174,7 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
       
   totla_jobs = 0
   job_data_list = []
-  with ThreadPoolExecutor(max_workers=4) as executor:
+  with ThreadPoolExecutor(max_workers=6) as executor:
     job_data = executor.map(execute_constructor, constructors)
     
     job_data_list= list(job_data)
