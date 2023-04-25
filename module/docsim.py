@@ -56,7 +56,8 @@ def rate_text(text, plavra=False):
     normalized_rating = sum_plavra_text_count / (plavra_count * text_count) if plavra_count * text_count != 0 else 0
 
     # Scale the rating to be between 0 and 5
-    scaled_rating = round(normalized_rating * 5, 4)
+    # scaled_rating = round(normalized_rating * 5, 4)
+    scaled_rating = sum_plavra_text_count
 
     # Print the values for plavra_count, text_count, plavra_text_count, and sum_plavra_text_count
     print(f"plavra_count: {plavra_count}, text_count: {text_count}, plavra_text_count: {plavra_text_count}, sum_plavra_text_count: {sum_plavra_text_count}, rating: {scaled_rating}")
