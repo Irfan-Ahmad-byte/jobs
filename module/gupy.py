@@ -48,7 +48,7 @@ class Gupy:
             return []
             
         print('===========>Getting cards for: ', url)
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=3)
         
         cards = []
         

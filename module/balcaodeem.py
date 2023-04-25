@@ -40,7 +40,7 @@ class Balca:
             return []
             
         print('===========>Getting cards for: ', url)
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=3)
         if res.status_code==200:
             time.sleep(.5)
             html = res.content
@@ -135,7 +135,7 @@ class Balca:
             data = {
                 "id": job_id
             }
-            res = requests.post(url, headers=headers, data=data)
+            res = requests.post(url, headers=headers, data=data, timeout=3)
             if res.status_code == 200:
                 description_page_info = {}
                 html = res.json()

@@ -64,7 +64,7 @@ class Jobs99:
             return self.cards
             
         print('===========>Getting cards for: ', url)
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=3)
         if res.status_code==200:
             time.sleep(.5)
             html = res.content

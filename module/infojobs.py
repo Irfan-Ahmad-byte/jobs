@@ -61,7 +61,7 @@ class Infojobs:
             return []
             
         print('===========>Getting cards for: ', url)
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=3)
         if res.status_code==200:
             self.job_keyword = url.split('=')[0].split('&')[0]
             time.sleep(.5)
@@ -87,6 +87,8 @@ class Infojobs:
                 self.cards.extend(cards_list.find_all('div', class_='card'))
             
             if self.total_pages > 1:
+                if self.total_pages > 10:
+                    self.total_pages = 10
                 numbered_pages = []
                 for i in range(2, self.total_pages):
                     numbered_pages.append(f'https://www.infojobs.com.br/vagas-de-emprego-{self.job_keyword}-em-porto-alegre,-rs.aspx?page={i}')
@@ -160,7 +162,7 @@ class Infojobs:
         if self.timeout_event.is_set():
             return None
         try:
-            res = requests.get(url, headers=headers)
+            res = requests.get(url, headers=headers, timeout=3)
             if res.status_code == 200:
                 description_page_info = {}
                 html = res.content
