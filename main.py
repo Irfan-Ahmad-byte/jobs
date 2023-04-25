@@ -184,9 +184,6 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
     jobs.extend(jb[0])
     
   random.shuffle(jobs)
-
-  if timeout_event.is_set():
-    return [jobs, total_jobs]
     
   return [jobs, total_jobs]
   
@@ -345,7 +342,7 @@ def get_jobs(user_params: JobsParams):
     result = [[], 0]
   
     def stop_extraction():
-        extraction_completed.wait(40)  # Wait for up to 90 seconds for extraction to complete
+        extraction_completed.wait(50)  # Wait for up to 90 seconds for extraction to complete
         timeout_event.set()
 
     def perform_extraction():

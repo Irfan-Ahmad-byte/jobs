@@ -71,6 +71,8 @@ class Infojobs:
             soup = BeautifulSoup(html, "html.parser")
 
             if not '?page=' in url:
+                if self.timeout_event.is_set():
+                    break
                 total_pages_element = soup.find('div', {'id':"resumeVacancies"})
                 if total_pages_element:
                     total_pages_element = total_pages_element.find('div', class_='col-auto caption')
