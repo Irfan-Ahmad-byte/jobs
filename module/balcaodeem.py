@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup, element
 from typing import Optional, List, Union
 
 from woocommerce import API
-from module.docsim import rate_text, normalize_text
+from module.docsim import rate_text, normalize_text, date_category
 from itertools import repeat
 from math import sqrt
 
@@ -27,9 +27,12 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class Balca:
-    def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
+    def __init__(self, urls:list, palavras, timeout_event: Event, time_period=None, card_num=10):
         self.urls = urls
         self.palavras = palavras
+        self.time_period = time_period
+        if time_period:
+            self.time_period = time_period.split('=r')[-1]
         self.timeout_event = timeout_event
         self.card_num = card_num
         
@@ -84,6 +87,14 @@ class Balca:
     def get_job_info(self, card):
         if self.timeout_event.is_set():
             return {}
+                        
+        job_title_element = job_title_section.find_all('div', recursive=False)
+
+        day_posted = job_title_element[1].find('strong').text.strip()
+        if self.time_period:
+            time_period = int(date_category(day_posted))
+            if time_period > int(self.time_period):
+                return
 
         # Get the text content and href attribute of the title link element
         job_id = card['id-vaga']
@@ -92,12 +103,8 @@ class Balca:
         job_title_section = job_secs[0]
         job_location_section = job_secs[1]
         job_detail_section = job_secs[3]
-                
-        job_title_element = job_title_section.find_all('div', recursive=False)
         
         job_title = job_title_element[0].text.strip()
-
-        day_posted = job_title_element[1].find('strong').text.strip()
 
         location = ' '.join(job_location_section.text.strip().split(' ')[1:])
 

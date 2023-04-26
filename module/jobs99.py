@@ -25,7 +25,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from module.docsim import rate_text, normalize_text
+from module.docsim import rate_text, normalize_text, date_category
 from itertools import repeat
 from math import sqrt
 
@@ -46,9 +46,10 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class Jobs99:
-    def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
+    def __init__(self, urls:list, palavras, timeout_event: Event, time_period, card_num=10):
         self.urls = urls
         self.palavras = palavras
+        self.time_period = time_period
         self.timeout_event = timeout_event
         self.card_num = card_num
         

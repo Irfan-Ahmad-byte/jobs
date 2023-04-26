@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from module.docsim import rate_text, normalize_text
+from module.docsim import rate_text, normalize_text, date_category
 from itertools import repeat
 from math import sqrt
 
@@ -37,9 +37,12 @@ def get_location(city):
     return location_ids
 
 class Gupy:
-    def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
+    def __init__(self, urls:list, palavras, timeout_event: Event, time_period=None, card_num=10):
         self.urls = urls
         self.palavras = palavras
+        self.time_period = time_period
+        if time_period:
+            self.time_period = time_period.split('=r')[-1]
         self.timeout_event = timeout_event
         self.card_num=card_num
         
@@ -66,11 +69,16 @@ class Gupy:
         if self.timeout_event.is_set():
             return {}
 
+        posted_date = card["publishedDate"].split('T')[0]
+        if self.time_period:
+            time_period = int(date_category(posted_date))
+            if time_period > int(self.time_period):
+                return
+        
         company_name = card["careerPageName"]
         location = f"{card['city']}, {card['state']}, {card['country']}"
         job_name = card["name"]
         description = card["description"]
-        posted_date = card["publishedDate"].split('T')[0]
         job_url = card["jobUrl"]
 
         rating = 0

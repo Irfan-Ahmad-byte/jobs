@@ -39,3 +39,4 @@ gunicorn
 websockets==10.4
 WooCommerce==3.0.0
 gunicorn
+python-dateutil

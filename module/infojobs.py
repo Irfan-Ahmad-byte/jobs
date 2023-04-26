@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from typing import Optional, List, Union
 
 from woocommerce import API
-from module.docsim import rate_text, normalize_text
+from module.docsim import rate_text, normalize_text, date_category
 from itertools import repeat
 from math import sqrt
 
@@ -46,9 +46,12 @@ def get_location(city):
     return location_ids
 
 class Infojobs:
-    def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
+    def __init__(self, urls:list, palavras, timeout_event: Event, time_period=None, card_num=10):
         self.urls = urls
         self.palavras = palavras
+        self.time_period = time_period
+        if time_period:
+            self.time_period = time_period.split('=r')[-1]
         self.timeout_event = timeout_event
         self.card_num = card_num
         self.cards = []
@@ -113,6 +116,13 @@ class Infojobs:
         if self.timeout_event.is_set():
             return {}
 
+        day_posted_element = card.find('div', class_='text-medium small')
+        day_posted = day_posted_element.text.strip()
+        if self.time_period:
+            time_period = int(date_category(day_posted))
+            if time_period > int(self.time_period):
+                return
+
         # Get the text content and href attribute of the title link element
         job_title_element = card.find('h2', class_='h3')
         if job_title_element is None:
@@ -122,8 +132,6 @@ class Infojobs:
             return None
         job_title = job_title_element.get_text(strip=True) if job_title_element else "Not specified"
 
-        day_posted_element = card.find('div', class_='text-medium small')
-        day_posted = day_posted_element.get_text(strip=True) if day_posted_element else "Not specified"
 
         job_url_element = card.find('div', class_='py-16')
         job_url = 'https://www.infojobs.com.br' + job_url_element['data-href'] if job_url_element else "Not specified"

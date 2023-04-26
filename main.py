@@ -113,7 +113,7 @@ def execute_constructor(constructor):
     return jobs
 
 
-def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
+def extractJobs(urls:list, plavras:list, timeout_event: Event, time_period, card_num=10):
   """
     Extracts job information from a list of LinkedIn job search URLs and a list of keywords (plavras).
     
@@ -160,17 +160,17 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, card_num=10):
   
   for key, value in sites.items():
     if key == '99jobs':
-      constructors.append(Jobs99(value, plavras, timeout_event, card_num))
+      constructors.append(Jobs99(value, plavras, timeout_event, time_period, card_num))
     elif key == 'linkedin':
       constructors.append(LinkedIn(value, plavras, timeout_event, card_num))
     elif key == 'trabalha':
       constructors.append(Trabalha(value, plavras, timeout_event, card_num))
     elif key == 'infojobs':
-      constructors.append(Infojobs(value, plavras, timeout_event, card_num))
+      constructors.append(Infojobs(value, plavras, timeout_event, time_period, card_num))
     elif key == 'gupy':
-      constructors.append(Gupy(value, plavras, timeout_event, card_num))
+      constructors.append(Gupy(value, plavras, timeout_event, time_period, card_num))
     elif key == 'balca':
-      constructors.append(Balca(value, plavras, timeout_event, card_num))
+      constructors.append(Balca(value, plavras, timeout_event, time_period, card_num))
       
   total_jobs = 0
   job_data_list = []
@@ -346,7 +346,7 @@ def get_jobs(user_params: JobsParams):
 
     def perform_extraction():
         global result
-        result = extractJobs(urls, plavra, timeout_event, cards_offset)
+        result = extractJobs(urls, plavra, timeout_event, time_period, cards_offset)
         extraction_completed.set()  # Signal that extraction is complete
 
 
@@ -418,7 +418,7 @@ if __name__ == "__main__":
 
     def perform_extraction():
         global result
-        result = extractJobs(url_list, plavra, timeout_event)
+        result = extractJobs(url_list, plavra, timeout_event, '&f_TPR=r86400')
         extraction_completed.set()  # Signal that extraction is complete
 
 

@@ -5,6 +5,43 @@ import unicodedata
 def normalize_text(text):
     return unicodedata.normalize('NFC', text)
     
+from datetime import datetime, timedelta
+from dateutil import parser
+
+def date_category(date_str: str) -> str:
+    # Dictionary to map Portuguese month abbreviations to month numbers
+    pt_month_abbr = {
+        'jan': '01', 'fev': '02', 'mar': '03', 'abr': '04',
+        'mai': '05', 'jun': '06', 'jul': '07', 'ago': '08',
+        'set': '09', 'out': '10', 'nov': '11', 'dez': '12'
+    }
+
+    # Replace the Portuguese month abbreviation in the input date string
+    for abbr, number in pt_month_abbr.items():
+        date_str = date_str.lower().replace(abbr, number)
+
+    # Parse the input date string
+    try:
+        input_date = parser.parse(date_str, dayfirst=True, yearfirst=False)
+    except ValueError:
+        return "Invalid date format"
+
+    # Set the date's year to the current year if it's missing
+    if input_date.year == 1900:
+        input_date = input_date.replace(year=datetime.now().year)
+
+    # Calculate the difference between the current date and the input date
+    delta = datetime.now() - input_date
+
+    if delta <= timedelta(hours=24):
+        return "86400"
+    elif delta <= timedelta(days=7):
+        return "604800"
+    elif delta <= timedelta(days=30):
+        return "2592000"
+    else:
+        return "25920000"
+    
 
 def rate_text(text, plavra=False):
     """
