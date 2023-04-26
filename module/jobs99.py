@@ -75,7 +75,8 @@ class Jobs99:
             # Find all the elements with class name 'base-card' which contain each job listing
             self.cards.extend(soup.find_all('a', class_='opportunity-card'))
                 
-            return self.cards
+            if len(self.cards)>self.card_num:
+                return self.cards[0:self.card_num]
         
         return self.cards
     
@@ -194,18 +195,15 @@ class Jobs99:
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
-                cards_list = executor.map(self.get_job_cards, self.urls)
-                
-            cards = [crd for card in cards_list for crd in card]
+                cards = executor.map(self.get_job_cards, self.urls)
+
+            cards = list(cards)
             print('//////////////////////')
-            print('Totla 99jobs Cards: ', len(cards))
+            print('Totla 99jobs Cards: ', len([crd for card in cards for crd in card]))
             print('//////////////////////')
-    
+
             if len(cards) ==0:
                 return [[], 0]
-
-            if len(cards)>self.card_num:
-                return cards[0:self.card_num]
 
             # Loop through each card element and extract the relevant information
             #results = [get_job_info(card, plavras) for card in cards]
@@ -213,11 +211,15 @@ class Jobs99:
             
             jobs_data_list = []
             
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                job_data = executor.map(self.get_job_info, cards)
-                
-            jobs_data_list.extend(list(job_data))
-                    
+            for card in cards:
+                if self.timeout_event.is_set():
+                    break
+                if len(card)>0:
+                    with ThreadPoolExecutor(max_workers=len(card)) as executor:
+                        job_data = executor.map(self.get_job_info, card)
+
+                    jobs_data_list.extend(list(job_data))
+
             results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)

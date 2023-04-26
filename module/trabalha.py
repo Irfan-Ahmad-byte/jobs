@@ -56,7 +56,8 @@ class Trabalha:
             if cards_list:
                 cards = cards_list.find_all('a', class_='job__vacancy')
                 
-            return cards
+            if len(cards)>self.card_num:
+                return cards[0:self.card_num]
         
         return cards
     
@@ -147,18 +148,15 @@ class Trabalha:
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
-                cards_list = executor.map(self.get_job_cards, self.urls)
-                
-            cards = [crd for card in cards_list for crd in card]
+                cards = executor.map(self.get_job_cards, self.urls)
+
+            cards = list(cards)
             print('//////////////////////')
-            print('Totla trabalha Cards: ', len(cards))
+            print('Totla trabalha Cards: ', len([crd for card in cards for crd in card]))
             print('//////////////////////')
-    
+
             if len(cards) ==0:
                 return [[], 0]
-
-            if len(cards)>self.card_num:
-                return cards[0:self.card_num]
 
             # Loop through each card element and extract the relevant information
             #results = [get_job_info(card, plavras) for card in cards]
@@ -166,11 +164,15 @@ class Trabalha:
             
             jobs_data_list = []
             
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                job_data = executor.map(self.get_job_info, cards)
-                
-            jobs_data_list.extend(list(job_data))
-                    
+            for card in cards:
+                if self.timeout_event.is_set():
+                    break
+                if len(card)>0:
+                    with ThreadPoolExecutor(max_workers=len(card)) as executor:
+                        job_data = executor.map(self.get_job_info, card)
+
+                    jobs_data_list.extend(list(job_data))
+
             results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)

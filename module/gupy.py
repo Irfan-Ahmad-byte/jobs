@@ -56,8 +56,9 @@ class Gupy:
             time.sleep(.5)
             cards = res.json()["data"]
             print(f'Total jobs for {url}: ', len(cards))
+            if len(cards)>self.card_num:
+                return cards[0:self.card_num]
             return cards
-        
         return cards
     
     
@@ -92,18 +93,15 @@ class Gupy:
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
-                cards_list = executor.map(self.get_job_cards, self.urls)
-                
-            cards = [crd for card in cards_list for crd in card]
+                cards = executor.map(self.get_job_cards, self.urls)
+
+            cards = list(cards)
             print('//////////////////////')
-            print('Totla Gupy job Cards: ', len(cards))
+            print('Totla Gupy job Cards: ', len([crd for card in cards for crd in card]))
             print('//////////////////////')
-            
+
             if len(cards) ==0:
                 return [[], 0]
-
-            if len(cards)>self.card_num:
-                return cards[0:self.card_num]
 
             # Loop through each card element and extract the relevant information
             #results = [get_job_info(card, plavras) for card in cards]
@@ -111,11 +109,15 @@ class Gupy:
             
             jobs_data_list = []
             
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                job_data = executor.map(self.get_job_info, cards)
-                
-            jobs_data_list.extend(list(job_data))
-                    
+            for card in cards:
+                if self.timeout_event.is_set():
+                    break
+                if len(card)>0:
+                    with ThreadPoolExecutor(max_workers=len(card)) as executor:
+                        job_data = executor.map(self.get_job_info, card)
+
+                    jobs_data_list.extend(list(job_data))
+
             results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)

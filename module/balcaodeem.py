@@ -34,11 +34,17 @@ class Balca:
         self.card_num = card_num
         
         self.total_pages = 1
-        self.cards = []
+        self.page_index = 1
         
-    def get_job_cards(self, url):
+    def parse_cards_url(self, url):
+        cards = []
+        cards = self.get_job_cards(cards, url)
+        return cards
+    
+    
+    def get_job_cards(self, cards:list, url):
         if self.timeout_event.is_set():
-            return []
+            return cards
             
         print('===========>Getting cards for: ', url)
         res = requests.get(url, headers=headers)
@@ -53,29 +59,22 @@ class Balca:
                 total_pages_element = soup.find('ul', class_='pagination')
                 if total_pages_element:
                     self.total_pages = len(total_pages_element.find_all('li'))
-            else:
-                self.total_pages = 1
 
             # Find all the elements with class name 'base-card' which contain each job listing
             cards_list = soup.find('fieldset')
             # get cards
       
             if cards_list:
-                self.cards.extend(cards_list.find_all('div', class_='panel-body panel-vaga link-draw-vaga'))
+                cards.extend(cards_list.find_all('div', class_='panel-body panel-vaga link-draw-vaga'))
+                
+            if len(cards) >= self.card_num:
+                return cards
                                     
-            if self.total_pages > 1:
-                if self.total_pages > 5:
-                    self.total_pages = 5
-                numbered_pages = []
-                for i in range(2, self.total_pages):
-                    numbered_pages.append(url.replace('?', f'?pagina={i}&'))
-            
-                with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
-                    cards = executor.map(self.get_job_cards, numbered_pages)
-
-            return self.cards
-        
-        return self.cards
+            if self.total_pages > self.page_index:
+                self.page_index += 1
+                self.get_job_cards(cards, url.replace('?', f'?pagina={self.page_index}&'))
+            else:
+                return cards
     
     
     def get_job_info(self, card):
@@ -171,18 +170,15 @@ class Balca:
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
-                cards_list = executor.map(self.get_job_cards, self.urls)
-                
-            cards = [crd for card in cards_list for crd in card]
+                cards = executor.map(self.parse_cards_url, self.urls)
+
+            cards = list(cards)
             print('//////////////////////')
-            print('Totla Balcaodeem Cards: ', len(cards))
+            print('Totla Balcaodeem Cards: ', len([crd for card in cards for crd in card]))
             print('//////////////////////')
-    
+
             if len(cards) ==0:
                 return [[], 0]
-
-            if len(cards)>self.card_num:
-                return cards[0:self.card_num]
 
             # Loop through each card element and extract the relevant information
             #results = [get_job_info(card, plavras) for card in cards]
@@ -190,11 +186,24 @@ class Balca:
             
             jobs_data_list = []
             
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                job_data = executor.map(self.get_job_info, cards)
-                
-            jobs_data_list.extend(list(job_data))
-                    
+            for card in cards:
+                if self.timeout_event.is_set():
+                    break
+                if len(card)>0:
+                    root = sqrt(len(card))
+                    if root >=1:
+                        if root > 10:
+                            workers = round(sqrt(len(card)))
+                        else:
+                            workers = len(card)
+                    else:
+                        workers = 1
+
+                    with ThreadPoolExecutor(max_workers=workers) as executor:
+                        job_data = executor.map(self.get_job_info, card)
+
+                    jobs_data_list.extend(list(job_data))
+
             results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)

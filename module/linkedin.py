@@ -67,7 +67,8 @@ class LinkedIn:
                 except:
                     ...
                     
-            return cards
+            if len(cards)>self.card_num:
+                return cards[0:self.card_num]
                 
         return cards
         
@@ -180,28 +181,38 @@ class LinkedIn:
     def main(self):
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
-                cards_list = executor.map(self.get_job_cards, self.urls)
-                
-            cards = [crd for card in cards_list for crd in card]
-          
+                cards = executor.map(self.get_job_cards, self.urls)
+
+            cards = list(cards)
+
             if len(cards) ==0:
                 return [[], 0]
-
-            if len(cards)>self.card_num:
-                return cards[0:self.card_num]
 
             # Loop through each card element and extract the relevant information
             #results = [get_job_info(card, plavras) for card in cards]
             results = []
             
-            jobs_data_list = []
-            
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                job_data = executor.map(self.get_job_info, cards)
-                
-            jobs_data_list.extend(list(job_data))
-                    
-            results = [jb for jb in jobs_data_list if jb]
+            job_data_list = []
+
+            for card in cards:
+                if self.timeout_event.is_set():
+                    break
+                if len(card)>0:
+                    time.sleep(2)
+                    root = sqrt(len(card))
+                    if root >=1:
+                        if root > 10:
+                            workers = round(sqrt(len(card)))
+                        else:
+                            workers = len(card)
+                    else:
+                        workers = 1
+                    with ThreadPoolExecutor(max_workers=workers) as executor:
+                        job_data = executor.map(self.get_job_info, card)
+
+                    job_data_list.extend(list(job_data))
+
+            results = [jb for jb in job_data_list if jb]
               
             total_cards = len(results)
               
