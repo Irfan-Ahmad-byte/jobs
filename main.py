@@ -39,7 +39,6 @@ from module.trabalha import Trabalha
 from module.infojobs import Infojobs, get_location
 from module.gupy import Gupy
 from module.balcaodeem import Balca
-from module.indeed import Indeed
 
 from itertools import repeat
 from math import sqrt

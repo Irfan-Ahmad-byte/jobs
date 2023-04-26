@@ -1,4 +1,6 @@
-
+'''
+not implemented yet
+'''
 
 from bs4 import BeautifulSoup
 from typing import Optional, List, Union
@@ -12,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Event, Thread
 
 import os
-import requests
+from requests_html import HTMLSession
 import json
 import re
 import time
@@ -21,7 +23,6 @@ import logging
 import unicodedata
 
 
-requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class Indeed:
@@ -47,11 +48,12 @@ class Indeed:
         print('===========>Getting cards for: ', url)
         
         time.sleep(random.uniform(1,5))
-        res = requests.get(url)
+        session = HTMLSession()
+        res = session.get(url)
         cards = []
         if res.status_code==200:
             time.sleep(1)
-            html = res.content    
+            html = res.html    
 
             # Parse the HTML content using BeautifulSoup library (or any other method)
             soup = BeautifulSoup(html, "html.parser")
@@ -67,8 +69,7 @@ class Indeed:
                     cards = soup.find_all('li')
                 except:
                     ...
-            if len(cards)>self.card_num:
-                return cards[0:self.card_num]
+            return cards
         else:
             print('status returned: ', res.status_code)
                 
@@ -162,7 +163,8 @@ class Indeed:
         #logging.info('Getting job description from %s', url)
         try:
           time.sleep(random.uniform(1,3))
-          res = requests.get(url, headers=headers, timeout=3)
+          session = HTMLSession()
+          res = session.get(url)
           if res.status_code == 200:
             html = res.content
 
@@ -192,38 +194,28 @@ class Indeed:
     def main(self):
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
-                cards = executor.map(self.get_job_cards, self.urls)
-          
-            cards = list(cards)
+                cards_list = executor.map(self.get_job_cards, self.urls)
+                
+            cards = [crd for card in cards_list for crd in card]
           
             if len(cards) ==0:
                 return [[], 0]
+
+            if len(cards)>self.card_num:
+                return cards[0:self.card_num]
 
             # Loop through each card element and extract the relevant information
             #results = [get_job_info(card, plavras) for card in cards]
             results = []
             
-            job_data_list = []
+            jobs_data_list = []
             
-            for card in cards:
-                if self.timeout_event.is_set():
-                    break
-                if len(card)>0:
-                    time.sleep(2)
-                    root = sqrt(len(card))
-                    if root >=1:
-                        if root > 10:
-                            workers = round(sqrt(len(card)))
-                        else:
-                            workers = len(card)
-                    else:
-                        workers = 1
-                    with ThreadPoolExecutor(max_workers=workers) as executor:
-                        job_data = executor.map(self.get_job_info, card)
-                  
-                    job_data_list.extend(list(job_data))
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                job_data = executor.map(self.get_job_info, cards)
+                
+            jobs_data_list.extend(list(job_data))
                     
-            results = [jb for jb in job_data_list if jb]
+            results = [jb for jb in jobs_data_list if jb]
               
             total_cards = len(results)
               
@@ -258,8 +250,8 @@ if __name__ == '__main__':
   try:
     start_time = time.time()
     url_list = [
-        'https://br.indeed.com/jobs?q=software+engineer&l=Rio+Branco%2C+AC&vjk=8a2f88b3be1d9e78',
-        'https://br.indeed.com/jobs?q=software+engineer&l=&vjk=82eca8fdfb93d010'
+        'https://uk.indeed.com/jobs?q=software+engineer&l=Rio+Branco%2C+AC&vjk=8a2f88b3be1d9e78',
+        'https://uk.indeed.com/jobs?q=software+engineer&l=&vjk=82eca8fdfb93d010'
     ]
 
     timeout_event = Event()

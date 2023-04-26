@@ -98,8 +98,6 @@ class Infojobs:
                 with ThreadPoolExecutor(max_workers=self.total_pages) as executor:
                     cards = executor.map(self.get_job_cards, numbered_pages)
             
-            if len(self.cards)>self.card_num:
-                return self.cards[0:self.card_num]
             return self.cards
         
         return self.cards
@@ -196,29 +194,29 @@ class Infojobs:
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
-                cards = executor.map(self.get_job_cards, self.urls)
+                cards_list = executor.map(self.get_job_cards, self.urls)
                 
-            cards = list(cards)
+            cards = [crd for card in cards_list for crd in card]
             print('//////////////////////')
-            print('Totla infojobs Cards: ', len([crd for card in cards for crd in card]))
+            print('Totla infojobs Cards: ', len(cards))
             print('//////////////////////')
     
             if len(cards) ==0:
                 return [[], 0]
+
+            if len(cards)>self.card_num:
+                return cards[0:self.card_num]
 
             # Loop through each card element and extract the relevant information
             #results = [get_job_info(card, plavras) for card in cards]
             results = []
             
             jobs_data_list = []
-            for card in cards:
-                if self.timeout_event.is_set():
-                    break
-                if len(card)>0:
-                    with ThreadPoolExecutor(max_workers=len(card)) as executor:
-                        job_data = executor.map(self.get_job_info, card)
-      
-                    jobs_data_list.extend(list(job_data))
+            
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                job_data = executor.map(self.get_job_info, cards)
+                
+            jobs_data_list.extend(list(job_data))
                     
             results = [jb for jb in jobs_data_list if jb]
     
