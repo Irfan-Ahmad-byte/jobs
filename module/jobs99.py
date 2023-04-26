@@ -1,25 +1,20 @@
 """
-https://99jobs.com/
+A module to scrape job listings from 99jobs.com and extract relevant job information.
 
+This module provides the Jobs99 class to scrape job listings from 99jobs.com,
+extract job information from the job cards, and rate the job descriptions based on provided keywords.
+
+Attributes:
+    requests.adapters.DEFAULT_RETRIES (int): Default number of retries for requests.
+    headers (dict): Default headers for requests.
+
+Classes:
+    Jobs99: A class that scrapes job listings from 99jobs.com.
+
+Developer: Irfan Ahmad, devirfan.mlka@gmail.com
+Project Owner: Monica Piccinini, monicapiccinini12@gmail.com
 """
 
-'''
-URL = 'https://99jobs.com/opportunities/filtered_search?utf8=%E2%9C%93&utm_source=tagportal&utm_medium=busca&utm_campaign=home&utm_id=001&
-search%5Bterm%5D=Engenharia+Ambiental&search%5Bstate%5D=2&search%5Bcity%5D%5B%5D=Acrel%C3%A2ndia
-'
-'''
-'''
-cards_element = 'a, .opportunity-card>div, .opportunity-card-content'
-location = cards_element > 'div, .opportunity-address'
-company = cards_element > 'div, .opportunity-card-footer>div, .opportunity-company-infos>h2 '
-rating = rate_text(description, palavra)
-jobtitle = 'div, .details>h2' OR 'div, #sidebar>h2'
-description_url = 'a, .opportunity-card[href]'
-
-palavra = palavras_list
-description = 'div .opportunity-company-infos> div list[.row]'.text
-days = 'div, .details>div, .subscription-btn>div, .progress' OR 'div, #sidebar>div, .subscription-btn>div, .progress'
-'''
 
 from bs4 import BeautifulSoup
 from typing import Optional, List, Union
@@ -46,6 +41,30 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class Jobs99:
+    """
+    A class that scrapes job listings from 99jobs.com.
+    
+    Attributes:
+        urls (list): List of URLs to scrape job listings from.
+        palavras (list): List of keywords for rating the job description.
+        timeout_event (Event): An event to stop the extraction process after a specified time.
+        time_period (int): The time in seconds after which the extraction process will be stopped.
+        card_num (int): Maximum number of job cards to be scraped.
+        
+    Methods:
+        get_job_cards(url: str) -> List[bs4.element.Tag]:
+            Scrapes the job cards from the given URL.
+            
+        get_job_info(card: bs4.element.Tag) -> dict:
+            Extracts job information from a given job card.
+            
+        extractDescription(url: str) -> Optional[dict]:
+            Extracts job description and location from a given job URL.
+            
+        main() -> List[Union[List[dict], int]]:
+            Scrapes job listings from the provided URLs and returns the extracted job information.
+    """
+    
     def __init__(self, urls:list, palavras, timeout_event: Event, time_period, card_num=10):
         self.urls = urls
         self.palavras = palavras
@@ -61,6 +80,16 @@ class Jobs99:
         self.cards = []
         
     def get_job_cards(self, url):
+        """
+        Scrapes the job cards from the given URL.
+        
+        Args:
+            url (str): The URL to scrape job listings from.
+            
+        Returns:
+            list: A list of BeautifulSoup Tag objects representing the job cards.
+        """
+        
         if self.timeout_event.is_set():
             return self.cards
             
@@ -87,6 +116,16 @@ class Jobs99:
     
     
     def get_job_info(self, card):
+        """
+        Extracts job information from a given job card.
+        
+        Args:
+            card (bs4.element.Tag): A BeautifulSoup Tag object representing a job card.
+            
+        Returns:
+            dict: A dictionary containing the extracted job information.
+        """
+        
         if self.timeout_event.is_set():
             return {}
         # Get the text content and href attribute of the title link element
@@ -135,16 +174,15 @@ class Jobs99:
 
     def extractDescription(self, url):
         """
-    Extracts job description and location from a LinkedIn job posting URL.
-    
-    Args:
-        url (str): A LinkedIn job posting URL.
-    
-    Returns:
-        dict: A dictionary containing the job description and location.
+        Extracts job description and location from a given job URL.
+        
+        Args:
+            url (str): A job posting URL.
+            
+        Returns:
+            dict: A dictionary containing the job description and location, or None if an error occurs.
         """
-        # Fetch the HTML content from the URL using requests library (or any other method)
-        #logging.info('Getting job description from %s', url)
+        
         if self.timeout_event.is_set():
             return None
         try:
@@ -200,6 +238,12 @@ class Jobs99:
             return None
         
     def main(self):
+        """
+        Scrapes job listings from the provided URLs and returns the extracted job information.
+        
+        Returns:
+            list: A list containing the extracted job information as dictionaries, and the total number of job cards.
+        """
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:

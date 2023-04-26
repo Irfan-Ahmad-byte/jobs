@@ -1,5 +1,10 @@
 """
-https://www.balcaodeempregos.com.br/
+This module scrapes job listings from 'https://www.balcaodeempregos.com.br/' and rates them based on the relevance of specified keywords.
+
+The main class in this module is Balca, which provides methods to parse job cards, extract job information, and rate the jobs based on the relevance of specified keywords.
+
+Developer: Irfan Ahmad, devirfan.mlka@gmail.com
+Project Owner: Monica Piccinini, monicapiccinini12@gmail.com
 """
 
 from bs4 import BeautifulSoup, element
@@ -27,6 +32,33 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class Balca:
+    """
+    A class to scrape and process job listings from 'https://www.balcaodeempregos.com.br/'.
+
+    Attributes:
+        urls (list): A list of URLs to scrape job listings from.
+        palavras (list): A list of keywords to rate the job listings.
+        timeout_event (Event): A threading.Event to signal when the scraping should be stopped.
+        time_period (Optional[str]): Time period filter for the job listings.
+        card_num (int): The maximum number of job cards to retrieve.
+
+    Methods:
+        parse_cards_url(url: str) -> List[Dict[str, str]]:
+            Parses job cards from the provided URL and returns a list of job card elements.
+
+        get_job_cards(cards: List, url: str) -> List[Dict[str, str]]:
+            Recursively fetches job cards and adds them to the cards list.
+
+        get_job_info(card: element.Tag) -> Optional[Dict[str, Union[str, int]]]:
+            Extracts job information from a job card element and returns a dictionary with the relevant data.
+
+        extractDescription(url: str, job_id: str) -> Optional[str]:
+            Extracts job description from the provided job posting URL.
+
+        main() -> Tuple[List[Dict[str, Union[str, int]]], int]:
+            The main function that orchestrates the scraping and processing of job listings.
+    """
+    
     def __init__(self, urls:list, palavras, timeout_event: Event, time_period=None, card_num=10):
         self.urls = urls
         self.palavras = palavras
@@ -40,6 +72,16 @@ class Balca:
         self.page_index = 1
         
     def parse_cards_url(self, url):
+        """
+        Parses job cards from the provided URL and returns a list of job card elements.
+
+        Args:
+            url (str): The URL to scrape job cards from.
+
+        Returns:
+            list: A list of job card elements.
+        """
+        
         cards = []
         cards = self.get_job_cards(cards, url)
         if len(cards)>self.card_num:
@@ -48,6 +90,17 @@ class Balca:
     
     
     def get_job_cards(self, cards:list, url):
+        """
+        Recursively fetches job cards and adds them to the cards list.
+
+        Args:
+            cards (list): The list of job cards to append to.
+            url (str): The URL to scrape job cards from.
+
+        Returns:
+            list: The list of job cards.
+        """
+        
         if self.timeout_event.is_set():
             return cards
             
@@ -85,6 +138,16 @@ class Balca:
             return cards
     
     def get_job_info(self, card):
+        """
+        Extracts job information from a job card element and returns a dictionary with the relevant data.
+
+        Args:
+            card (element.Tag): A job card element.
+
+        Returns:
+            Optional[dict]: A dictionary with job information, or None if the time_period condition is not met.
+        """
+        
         if self.timeout_event.is_set():
             return {}
                         
@@ -145,16 +208,15 @@ class Balca:
 
     def extractDescription(self, url, job_id):
         """
-    Extracts job description and location from a LinkedIn job posting URL.
-    
-    Args:
-        url (str): A LinkedIn job posting URL.
-    
-    Returns:
-        dict: A dictionary containing the job description and location.
+        Extracts job description from the provided job posting URL.
+
+        Args:
+            url (str): A job posting URL.
+            job_id (str): The job ID to fetch the description for.
+
+        Returns:
+            Optional[str]: The job description or None if an error occurs.
         """
-        # Fetch the HTML content from the URL using requests library (or any other method)
-        #logging.info('Getting job description from %s', url)
         
         try:
             data = {
@@ -179,6 +241,12 @@ class Balca:
             
         
     def main(self):
+        """
+        The main function that orchestrates the scraping and processing of job listings.
+
+        Returns:
+            Tuple[list, int]: A tuple with a list of job dictionaries and the total number of job cards.
+        """
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:

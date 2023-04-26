@@ -1,5 +1,10 @@
 """
-https://portal.gupy.io/en
+This module provides a Gupy class to scrape and process job listings from 'https://portal.gupy.io/en'.
+It extracts job information such as the job title, company name, location, posted date, and job URL.
+Additionally, it rates the job listing based on the provided keywords.
+
+Developer: Irfan Ahmad, devirfan.mlka@gmail.com
+Project Owner: Monica Piccinini, monicapiccinini12@gmail.com
 """
 
 from bs4 import BeautifulSoup
@@ -37,6 +42,27 @@ def get_location(city):
     return location_ids
 
 class Gupy:
+    """
+    A class to scrape and process job listings from 'https://portal.gupy.io/en'.
+
+    Attributes:
+        urls (list): A list of URLs to scrape job listings from.
+        palavras (list): A list of keywords to rate the job listings.
+        timeout_event (Event): A threading.Event to signal when the scraping should be stopped.
+        time_period (Optional[str]): Time period filter for the job listings.
+        card_num (int): The maximum number of job cards to retrieve.
+
+    Methods:
+        get_job_cards(url: str) -> List[Dict[str, str]]:
+            Fetches job cards from the provided URL and returns a list of job card elements.
+
+        get_job_info(card: Dict[str, str]) -> Optional[Dict[str, Union[str, int]]]:
+            Extracts job information from a job card element and returns a dictionary with the relevant data.
+
+        main() -> Tuple[List[Dict[str, Union[str, int]]], int]:
+            The main function that orchestrates the scraping and processing of job listings.
+    """
+    
     def __init__(self, urls:list, palavras, timeout_event: Event, time_period=None, card_num=10):
         self.urls = urls
         self.palavras = palavras
@@ -47,6 +73,16 @@ class Gupy:
         self.card_num=card_num
         
     def get_job_cards(self, url):
+        """
+        Fetches job cards from the provided URL and returns a list of job card elements.
+
+        Args:
+            url (str): The URL to scrape job cards from.
+
+        Returns:
+            list: A list of job card elements.
+        """
+        
         if self.timeout_event.is_set():
             return []
             
@@ -66,6 +102,16 @@ class Gupy:
     
     
     def get_job_info(self, card):
+        """
+        Extracts job information from a job card element and returns a dictionary with the relevant data.
+
+        Args:
+            card (Dict[str, str]): A job card element.
+
+        Returns:
+            Optional[dict]: A dictionary with job information, or None if the time_period condition is not met.
+        """
+        
         if self.timeout_event.is_set():
             return {}
 
@@ -101,6 +147,12 @@ class Gupy:
             return job
         
     def main(self):
+        """
+        The main function that orchestrates the scraping and processing of job listings.
+
+        Returns:
+            Tuple[list, int]: A tuple with a list of job dictionaries and the total number of job cards.
+        """
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:

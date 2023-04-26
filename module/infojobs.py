@@ -1,15 +1,10 @@
 """
-https://www.infojobs.com.br/
+This module is designed to scrape job postings from the InfoJobs website (https://www.infojobs.com.br/) and analyze their descriptions
+based on the given keywords. It then assigns a rating to each job posting based on how well the description matches the specified keywords.
+
+Developer: Irfan Ahmad, devirfan.mlka@gmail.com
+Project Owner: Monica Piccinini, monicapiccinini12@gmail.com
 """
-
-'''
-get location is => https://www.infojobs.com.br/mf-publicarea/api/autocompleteapi/locations?query=Bras%C3%ADlia
-response: {"suggestions":[{"data":{"id":"5203868","group":"Cidades","groupType":5,"groupIconHtml":"\r\n\r\n    <span class=\"icon icon-location   icon-size-16\">\r\n        <svg><use xlink:href=\"#location\" /></svg>\r\n    </span>\r\n"},"value":"Brasília - DF"},{"data":{"id":"5206605","group":"Cidades","groupType":5,"groupIconHtml":"\r\n\r\n    <span class=\"icon icon-location   icon-size-16\">\r\n        <svg><use xlink:href=\"#location\" /></svg>\r\n    </span>\r\n"},"value":"Brasília Legal - PA"},{"data":{"id":"5204830","group":"Cidades","groupType":5,"groupIconHtml":"\r\n\r\n    <span class=\"icon icon-location   icon-size-16\">\r\n        <svg><use xlink:href=\"#location\" /></svg>\r\n    </span>\r\n"},"value":"Brasília de Minas - MG"}]}
-
-jobs link => https://www.infojobs.com.br/empregos.aspx?palabra=Jovem+Aprendiz&poblacion=5203868
-
-
-'''
 
 from bs4 import BeautifulSoup
 from typing import Optional, List, Union
@@ -46,7 +41,22 @@ def get_location(city):
     return location_ids
 
 class Infojobs:
+    """
+    A class that represents the InfoJobs scraper, designed to scrape job postings and analyze their descriptions based on given keywords.
+    """
+    
     def __init__(self, urls:list, palavras, timeout_event: Event, time_period=None, card_num=10):
+        """
+        Initializes the Infojobs object with the specified parameters.
+
+        Args:
+            urls (list): A list of URLs to scrape job postings from.
+            palavras (list): A list of keywords to analyze job descriptions.
+            timeout_event (Event): A threading Event object used to stop the scraper after a specified period of time.
+            time_period (Optional[str]): A time period filter for scraping job postings (default is None).
+            card_num (int): The maximum number of job cards to scrape (default is 10).
+        """
+        
         self.urls = urls
         self.palavras = palavras
         self.time_period = time_period
@@ -60,6 +70,16 @@ class Infojobs:
         self.job_keyword = None
         
     def parse_cards_url(self, url):
+        """
+        Parses the specified URL to obtain a list of job cards.
+
+        Args:
+            url (str): The URL to parse.
+
+        Returns:
+            list: A list of job cards obtained from the specified URL.
+        """
+        
         cards = []
         cards = self.get_job_cards(cards, url)
         if len(cards)>self.card_num:
@@ -67,6 +87,17 @@ class Infojobs:
         return cards
         
     def get_job_cards(self, cards:list, url):
+        """
+        Retrieves job cards from the specified URL and appends them to the cards list.
+
+        Args:
+            cards (list): The list of job cards to append new job cards to.
+            url (str): The URL to retrieve job cards from.
+
+        Returns:
+            list: The updated list of job cards.
+        """
+        
         if self.timeout_event.is_set():
             return cards
             
@@ -113,12 +144,22 @@ class Infojobs:
     
     
     def get_job_info(self, card):
+        """
+        Extracts job information from a job card and returns it as a dictionary.
+
+        Args:
+            card (BeautifulSoup object): A BeautifulSoup object representing a job card.
+
+        Returns:
+            dict: A dictionary containing the extracted job information.
+        """
+        
         if self.timeout_event.is_set():
             return {}
 
         day_posted_element = card.find('div', class_='text-medium small')
         day_posted = day_posted_element.text.strip()
-        if self.time_period and len(day_posted)>0:
+        if self.time_period:
             time_period = int(date_category(day_posted))
             if time_period > int(self.time_period):
                 return
@@ -166,14 +207,15 @@ class Infojobs:
 
     def extractDescription(self, url):
         """
-    Extracts job description and location from a LinkedIn job posting URL.
-    
-    Args:
-        url (str): A LinkedIn job posting URL.
-    
-    Returns:
-        dict: A dictionary containing the job description and location.
+        Extracts the job description from a job posting URL.
+
+        Args:
+            url (str): The job posting URL.
+
+        Returns:
+            str: The extracted job description.
         """
+        
         # Fetch the HTML content from the URL using requests library (or any other method)
         #logging.info('Getting job description from %s', url)
         if self.timeout_event.is_set():
@@ -208,6 +250,12 @@ class Infojobs:
             
         
     def main(self):
+        """
+        Main function that coordinates the scraping and processing of job postings from the InfoJobs website.
+
+        Returns:
+            tuple: A tuple containing a list of job postings and the total number of job postings.
+        """
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
