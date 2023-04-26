@@ -118,7 +118,10 @@ class Balca:
 
         rating = 0
         if job_desc is not None:
-            rating = rate_text(normalize_text(job_desc), self.palavras)
+            try:
+                rating = rate_text(normalize_text(job_desc), self.palavras)
+            except:
+                rating = '---'
 
             job = {
         "jobTitle": normalize_text(job_title),

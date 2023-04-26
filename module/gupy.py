@@ -75,19 +75,22 @@ class Gupy:
 
         rating = 0
         if description:
-            rating = rate_text(normalize_text(description), self.palavras)
+            try:
+                rating = rate_text(normalize_text(description), self.palavras)
+            except:
+                rating = '---'
 
-        job = {
+            job = {
         "jobTitle": normalize_text(job_name),
         "companyName": normalize_text(company_name),
         "dayPosted": posted_date,
         "jobURL": job_url,
         'rating': rating,
         'location': normalize_text(location)
-        }
+            }
 
-        print('JOB: ', json.dumps(job, indent=2))
-        return job
+            print('JOB: ', json.dumps(job, indent=2))
+            return job
         
     def main(self):
         

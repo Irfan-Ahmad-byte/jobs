@@ -113,7 +113,10 @@ class Jobs99:
             # Get the text content of the date span element
             dayPosted = jobDesc['days_ramained']
     
-            rating = rate_text(normalize_text(jobDesc['description']), self.palavras)
+            try:
+                rating = rate_text(normalize_text(jobDesc['description']), self.palavras)
+            except:
+                rating = '---'
         
             job = {
           "jobTitle": jobTitle,

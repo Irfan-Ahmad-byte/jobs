@@ -115,7 +115,10 @@ class LinkedIn:
             dayPosted = False
           
         if jobDesc:
-            rating = rate_text(normalize_text(jobDesc), self.palavras)
+            try:
+                rating = rate_text(normalize_text(jobDesc), self.palavras)
+            except:
+                rating = '---'
               
             job = {
                 "jobTitle": jobTitle,

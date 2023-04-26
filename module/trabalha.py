@@ -87,20 +87,23 @@ class Trabalha:
         rating = 0
         
         if jobDesc is not None:
-            rating = rate_text(normalize_text(jobDesc), self.palavras)
+            try:
+                rating = rate_text(normalize_text(jobDesc), self.palavras)
+            except:
+                rating = '---'
         
-        job = {
+            job = {
           "jobTitle": jobTitle,
           "companyName": companyName,
           "dayPosted": dayPosted,
            "jobURL": jobURL,
            'rating': rating,
           'location': normalize_text(location)
-            }
+                }
       
-        print('JOB: ', json.dumps(job, indent=2))
-        # Create a dictionary with all these information and append it to results list 
-        return job
+            print('JOB: ', json.dumps(job, indent=2))
+            # Create a dictionary with all these information and append it to results list 
+            return job
 
 
     def extractDescription(self, url):
