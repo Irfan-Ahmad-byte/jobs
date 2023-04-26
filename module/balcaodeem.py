@@ -39,6 +39,8 @@ class Balca:
     def parse_cards_url(self, url):
         cards = []
         cards = self.get_job_cards(cards, url)
+        if len(cards)>self.card_num:
+            return cards[0:self.card_num]
         return cards
     
     
@@ -47,35 +49,37 @@ class Balca:
             return cards
             
         print('===========>Getting cards for: ', url)
-        res = requests.get(url, headers=headers)
-        if res.status_code==200:
-            time.sleep(.5)
-            html = res.content
+        try:
+            res = requests.get(url, headers=headers)
+            if res.status_code==200:
+                time.sleep(.5)
+                html = res.content
       
-            # Parse the HTML content using BeautifulSoup library (or any other method)
-            soup = BeautifulSoup(html, "html.parser")
+                # Parse the HTML content using BeautifulSoup library (or any other method)
+                soup = BeautifulSoup(html, "html.parser")
             
-            if '?pagina=' not in url:
-                total_pages_element = soup.find('ul', class_='pagination')
-                if total_pages_element:
-                    self.total_pages = len(total_pages_element.find_all('li'))
+                if '?pagina=' not in url:
+                    total_pages_element = soup.find('ul', class_='pagination')
+                    if total_pages_element:
+                        self.total_pages = len(total_pages_element.find_all('li'))
 
-            # Find all the elements with class name 'base-card' which contain each job listing
-            cards_list = soup.find('fieldset')
-            # get cards
+                # Find all the elements with class name 'base-card' which contain each job listing
+                cards_list = soup.find('fieldset')
+                # get cards
       
-            if cards_list:
-                cards.extend(cards_list.find_all('div', class_='panel-body panel-vaga link-draw-vaga'))
+                if cards_list:
+                    cards.extend(cards_list.find_all('div', class_='panel-body panel-vaga link-draw-vaga'))
                 
-            if len(cards) >= self.card_num:
-                return cards
+                if len(cards) >= self.card_num:
+                    return cards
                                     
-            if self.total_pages > self.page_index:
-                self.page_index += 1
-                self.get_job_cards(cards, url.replace('?', f'?pagina={self.page_index}&'))
-            else:
-                return cards
-    
+                if self.total_pages > self.page_index:
+                    self.page_index += 1
+                    self.get_job_cards(cards, url.replace('?', f'?pagina={self.page_index}&'))
+                else:
+                    return cards
+        except:
+            return cards
     
     def get_job_info(self, card):
         if self.timeout_event.is_set():
@@ -127,8 +131,6 @@ class Balca:
 
             print('JOB: ', json.dumps(job, indent=2))
             return job
-        else:
-            None
 
 
     def extractDescription(self, url, job_id):

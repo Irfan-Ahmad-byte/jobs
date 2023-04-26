@@ -64,21 +64,25 @@ class Jobs99:
             return self.cards
             
         print('===========>Getting cards for: ', url)
-        res = requests.get(url, headers=headers, timeout=3)
-        if res.status_code==200:
-            time.sleep(.5)
-            html = res.content
+        try:
+            res = requests.get(url, headers=headers, timeout=3)
+            if res.status_code==200:
+                time.sleep(.5)
+                html = res.content
       
-            # Parse the HTML content using BeautifulSoup library (or any other method)
-            soup = BeautifulSoup(html, "html.parser")
+                # Parse the HTML content using BeautifulSoup library (or any other method)
+                soup = BeautifulSoup(html, "html.parser")
             
-            # Find all the elements with class name 'base-card' which contain each job listing
-            self.cards.extend(soup.find_all('a', class_='opportunity-card'))
+                # Find all the elements with class name 'base-card' which contain each job listing
+                self.cards.extend(soup.find_all('a', class_='opportunity-card'))
                 
-            if len(self.cards)>self.card_num:
-                return self.cards[0:self.card_num]
+                if len(self.cards)>self.card_num:
+                    return self.cards[0:self.card_num]
         
-        return self.cards
+            return self.cards
+            
+        except:
+            return self.cards
     
     
     def get_job_info(self, card):
