@@ -1,23 +1,17 @@
 """
-This API module is designed to fetch, process, and rate job postings from LinkedIn. It uses FastAPI to provide an endpoint for getting jobs with specific titles, keywords, and location parameters. The API also utilizes the `rate_text` function from the `docsim.py` module to rate job postings based on the relevance of their descriptions to the provided keywords.
+This API module is designed to fetch, process, and rate job postings from various platforms, including LinkedIn, 99jobs, Trabalha Brasil, Infojobs, Gupy, and Balca de Empregos. It uses FastAPI to provide an endpoint for getting jobs with specific titles, keywords, and location parameters. The API also utilizes the `rate_text` function from the `docsim.py` module to rate job postings based on the relevance of their descriptions to the provided keywords.
 
 Developer: Irfan Ahmad (devirfan.mlka@gmail.com / https://irfan-ahmad.com)
 Project Owner: Monica Piccinini (monicapiccinini12@gmail.com)
 
 The module contains the following functions:
-    - get_job_info: Extracts relevant information from a job card.
-    - get_job_cards: Fetches job cards from a LinkedIn URL.
-    - extractJobs: Fetches job listings from LinkedIn based on the provided URLs and keywords.
-    - extractDescription: Extracts job description and location from a LinkedIn job posting URL.
-    - rate_job: Rates a job based on its description and a list of keywords (plavras).
-    - search_customer: Searches for a customer by ID and returns relevant customer information.
+    - extractJobs: Fetches job listings from various platforms based on the provided URLs and keywords.
     - create_time_param: Converts a time period string into a LinkedIn time parameter.
 
 The module also defines the following FastAPI endpoints:
     - /jobs: Accepts a POST request with job titles, keywords, time period, and location, and returns the relevant job listings.
-    - /description: Accepts a GET request with a job posting URL as a query parameter, and returns the job description and location.
+    - /: Displays a "Hello World" message.
 """
-
 
 
 # Import FastAPI and requests libraries
