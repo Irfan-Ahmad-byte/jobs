@@ -118,7 +118,7 @@ class Infojobs:
 
         day_posted_element = card.find('div', class_='text-medium small')
         day_posted = day_posted_element.text.strip()
-        if self.time_period:
+        if self.time_period and len(day_posted)>0:
             time_period = int(date_category(day_posted))
             if time_period > int(self.time_period):
                 return

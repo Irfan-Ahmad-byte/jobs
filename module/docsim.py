@@ -5,7 +5,7 @@ import unicodedata
 def normalize_text(text):
     return unicodedata.normalize('NFC', text)
     
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil import parser
 
 def date_category(date_str: str) -> str:
@@ -13,7 +13,8 @@ def date_category(date_str: str) -> str:
     pt_month_abbr = {
         'jan': '01', 'fev': '02', 'mar': '03', 'abr': '04',
         'mai': '05', 'jun': '06', 'jul': '07', 'ago': '08',
-        'set': '09', 'out': '10', 'nov': '11', 'dez': '12'
+        'set': '09', 'out': '10', 'nov': '11', 'dez': '12',
+        'ontem': (date.today() - timedelta(days=1)).strftime('%d/%m/%y')
     }
 
     # Replace the Portuguese month abbreviation in the input date string
@@ -21,6 +22,7 @@ def date_category(date_str: str) -> str:
         date_str = date_str.lower().replace(abbr, number)
 
     # Parse the input date string
+    print('DATE DATE DATE: ', date_str)
     try:
         input_date = parser.parse(date_str, dayfirst=True, yearfirst=False)
     except ValueError:

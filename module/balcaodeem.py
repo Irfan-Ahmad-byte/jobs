@@ -88,6 +88,8 @@ class Balca:
         if self.timeout_event.is_set():
             return {}
                         
+        job_secs = card.find_all('div', recursive=False)
+        job_title_section = job_secs[0]
         job_title_element = job_title_section.find_all('div', recursive=False)
 
         day_posted = job_title_element[1].find('strong').text.strip()
@@ -99,8 +101,6 @@ class Balca:
         # Get the text content and href attribute of the title link element
         job_id = card['id-vaga']
         
-        job_secs = card.find_all('div', recursive=False)
-        job_title_section = job_secs[0]
         job_location_section = job_secs[1]
         job_detail_section = job_secs[3]
         

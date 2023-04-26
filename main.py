@@ -159,18 +159,18 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, time_period, card
   constructors = []
   
   for key, value in sites.items():
-    if key == '99jobs':
+    if key == 'balca':
+      constructors.append(Balca(value, plavras, timeout_event, time_period, card_num))
+    elif key == 'infojobs':
+      constructors.append(Infojobs(value, plavras, timeout_event, time_period, card_num))
+    elif key == '99jobs':
       constructors.append(Jobs99(value, plavras, timeout_event, time_period, card_num))
     elif key == 'linkedin':
       constructors.append(LinkedIn(value, plavras, timeout_event, card_num))
     elif key == 'trabalha':
       constructors.append(Trabalha(value, plavras, timeout_event, card_num))
-    elif key == 'infojobs':
-      constructors.append(Infojobs(value, plavras, timeout_event, time_period, card_num))
     elif key == 'gupy':
       constructors.append(Gupy(value, plavras, timeout_event, time_period, card_num))
-    elif key == 'balca':
-      constructors.append(Balca(value, plavras, timeout_event, time_period, card_num))
       
   total_jobs = 0
   job_data_list = []
@@ -418,7 +418,7 @@ if __name__ == "__main__":
 
     def perform_extraction():
         global result
-        result = extractJobs(url_list, plavra, timeout_event, '&f_TPR=r86400')
+        result = extractJobs(url_list, plavra, timeout_event, '&f_TPR=r2592000')
         extraction_completed.set()  # Signal that extraction is complete
 
 
