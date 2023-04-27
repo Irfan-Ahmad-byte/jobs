@@ -111,7 +111,6 @@ class Balca:
                 time.sleep(.5)
                 html = res.content
       
-                # Parse the HTML content using BeautifulSoup library (or any other method)
                 soup = BeautifulSoup(html, "html.parser")
             
                 if '?pagina=' not in url:
@@ -119,7 +118,6 @@ class Balca:
                     if total_pages_element:
                         self.total_pages = len(total_pages_element.find_all('li'))
 
-                # Find all the elements with class name 'base-card' which contain each job listing
                 cards_list = soup.find('fieldset')
                 # get cards
       
@@ -161,7 +159,6 @@ class Balca:
             if time_period > int(self.time_period):
                 return
 
-        # Get the text content and href attribute of the title link element
         job_id = card['id-vaga']
         
         job_location_section = job_secs[1]
@@ -226,17 +223,11 @@ class Balca:
             if res.status_code == 200:
                 description_page_info = {}
                 html = res.json()
-    
-                # Find the element with class name 'description__text' which contains the job's description
                 description = html['vaga']['Descricao']
                 return description
 
         except Exception as e:
             print('Error while getting job description: %s, %s', str(e), url)
-
-            #print('Finished getting job description from %s', url)
-
-            # Return result dictionary 
             return None
             
         
@@ -260,8 +251,6 @@ class Balca:
             if len(cards) ==0:
                 return [[], 0]
 
-            # Loop through each card element and extract the relevant information
-            #results = [get_job_info(card, plavras) for card in cards]
             results = []
             
             jobs_data_list = []
@@ -287,9 +276,6 @@ class Balca:
             results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)
-    
-        #    for job in job_data_list:
-         #     results.append(job)
       
             return [results, total_cards]
   

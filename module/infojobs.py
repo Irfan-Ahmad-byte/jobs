@@ -109,8 +109,7 @@ class Infojobs:
                 self.job_keyword = url.split('=')[1].split('&')[0]
                 time.sleep(.5)
                 html = res.content
-      
-                # Parse the HTML content using BeautifulSoup library (or any other method)
+                
                 soup = BeautifulSoup(html, "html.parser")
 
                 if not '?page=' in url:
@@ -120,7 +119,6 @@ class Infojobs:
                         if total_pages_element:
                             self.total_pages = int(total_pages_element.get_text().split()[-1])
             
-                # Find all the elements with class name 'base-card' which contain each job listing
                 cards_list = soup.find('div', {'id':"filterSideBar"})
                 # get cards
       
@@ -164,7 +162,6 @@ class Infojobs:
             if time_period > int(self.time_period):
                 return
 
-        # Get the text content and href attribute of the title link element
         job_title_element = card.find('h2', class_='h3')
         if job_title_element is None:
             print('============== FAILED CARD ================')
@@ -216,8 +213,6 @@ class Infojobs:
             str: The extracted job description.
         """
         
-        # Fetch the HTML content from the URL using requests library (or any other method)
-        #logging.info('Getting job description from %s', url)
         if self.timeout_event.is_set():
             return None
         try:
@@ -226,10 +221,7 @@ class Infojobs:
                 description_page_info = {}
                 html = res.content
 
-                # Parse the HTML content using BeautifulSoup library (or any other method)
                 soup = BeautifulSoup(html, "html.parser")
-    
-                # Find the element with class name 'description__text' which contains the job's description
                 descriptionDiv = soup.find("div", class_="js_vacancyDataPanels")
       
                 # Get the text content of the element
@@ -242,10 +234,6 @@ class Infojobs:
 
         except Exception as e:
             print('Error while getting job description: %s, %s', str(e), url)
-
-            #print('Finished getting job description from %s', url)
-
-            # Return result dictionary 
             return None
             
         
@@ -269,9 +257,7 @@ class Infojobs:
 
             if len(cards) ==0:
                 return [[], 0]
-
-            # Loop through each card element and extract the relevant information
-            #results = [get_job_info(card, plavras) for card in cards]
+                
             results = []
             
             jobs_data_list = []
@@ -288,9 +274,6 @@ class Infojobs:
             results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)
-    
-        #    for job in job_data_list:
-         #     results.append(job)
       
             return [results, total_cards]
   

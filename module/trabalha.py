@@ -1,5 +1,9 @@
 """
-https://www.trabalhabrasil.com.br/
+This module is used for scraping job listings from Trabalha Brasil (https://www.trabalhabrasil.com.br/) based on the provided search URLs and a list of keywords.
+The script utilizes the BeautifulSoup library in Python to parse the HTML content and extract the relevant job information.
+
+Developer: Irfan Ahmad, devirfan.mlka@gmail.com
+Project Owner: Monica Piccinini, monicapiccinini12@gmail.com
 """
 
 
@@ -28,6 +32,32 @@ requests.adapters.DEFAULT_RETRIES = 3
 headers = {'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
 
 class Trabalha:
+    """
+    A class used to represent a Trabalha Brasil job scraper.
+
+    Attributes:
+    -----------
+    urls : list
+        A list of Trabalha Brasil job search URLs.
+    palavras : list
+        A list of keywords to rate the jobs.
+    timeout_event : Event
+        A threading Event object to control the timeout functionality.
+    card_num : int, optional
+        The maximum number of job cards to be returned, defaults to 10.
+
+    Methods:
+    --------
+    get_job_cards(self, url)
+        Fetches the HTML content from a Trabalha Brasil jobs search URL and returns a list of job cards as BeautifulSoup objects.
+    get_job_info(self, card)
+        Extracts job information from a BeautifulSoup card object and a list of keywords.
+    extractDescription(self, url)
+        Extracts job description from a Trabalha Brasil job posting URL.
+    main(self)
+        Controls the flow of the script, fetching job cards, extracting information, and returning the result.
+    """
+    
     def __init__(self, urls:list, palavras, timeout_event: Event, card_num=10):
         self.urls = urls
         self.palavras = palavras
@@ -35,6 +65,16 @@ class Trabalha:
         self.card_num = card_num
         
     def get_job_cards(self, url):
+        """
+        Fetches the HTML content from a Trabalha Brasil jobs search URL and returns a list of job cards as BeautifulSoup objects.
+        
+        Args:
+            url (str): A Trabalha Brasil job search URL.
+        
+        Returns:
+            List[bs4.element.Tag]: A list of job cards as BeautifulSoup objects.
+        """
+        
         if self.timeout_event.is_set():
             return []
             
@@ -45,10 +85,8 @@ class Trabalha:
             time.sleep(.5)
             html = res.content
       
-            # Parse the HTML content using BeautifulSoup library (or any other method)
             soup = BeautifulSoup(html, "html.parser")
 
-            # Find all the elements with class name 'base-card' which contain each job listing
             cards_list = soup.find('div', {"id":"jobs-wrapper"})
       
             # get cards
@@ -63,9 +101,19 @@ class Trabalha:
     
     
     def get_job_info(self, card):
+        """
+        Extracts job information from a BeautifulSoup card object and a list of keywords (palavras).
+          
+        Args:
+            card (bs4.element.Tag): A BeautifulSoup object representing a single job card.
+            palavras (List[str]): A list of keywords to rate the job.
+          
+        Returns:
+            dict: A dictionary containing job title, company name, day posted, job URL, rating, and location.
+        """
+        
         if self.timeout_event.is_set():
             return {}
-        # Get the text content and href attribute of the title link element
         jobTitle = card.find('h2', class_='job__name').text.strip()
         
         dayPosted = '---'
@@ -78,7 +126,6 @@ class Trabalha:
 
         jobDesc = self.extractDescription(jobURL)
   
-        # Get the text content of the company link element
         try:
             companyName = card.find('h3', class_='job__company').text.strip()
         except:
@@ -102,22 +149,19 @@ class Trabalha:
                 }
       
             print('JOB: ', json.dumps(job, indent=2))
-            # Create a dictionary with all these information and append it to results list 
             return job
 
 
-    def extractDescription(self, url):
+    def """
+        Extracts job description from a Trabalha Brasil job posting URL.
+          
+        Args:
+            url (str): A Trabalha Brasil job posting URL.
+          
+        Returns:
+            str: The job description as a string, or None if not found.
         """
-    Extracts job description and location from a LinkedIn job posting URL.
-    
-    Args:
-        url (str): A LinkedIn job posting URL.
-    
-    Returns:
-        dict: A dictionary containing the job description and location.
-        """
-        # Fetch the HTML content from the URL using requests library (or any other method)
-        #logging.info('Getting job description from %s', url)
+        
         if self.timeout_event.is_set():
             return None
         try:
@@ -125,10 +169,7 @@ class Trabalha:
             if res.status_code == 200:
                 html = res.content
 
-                # Parse the HTML content using BeautifulSoup library (or any other method)
                 soup = BeautifulSoup(html, "html.parser")
-    
-                # Find the element with class name 'description__text' which contains the job's description
                 descriptionDiv = soup.find("div", class_="jobview__info")
       
                 # Get the text content of the element
@@ -141,13 +182,15 @@ class Trabalha:
 
         except Exception as e:
             print('Error while getting job description: %s, %s', str(e), url)
-
-            #print('Finished getting job description from %s', url)
-
-            # Return result dictionary 
             return None
         
     def main(self):
+        """
+        Controls the flow of the script, fetching job cards, extracting information, and returning the result.
+
+        Returns:
+            tuple: A tuple containing a list of dictionaries with the job details and the total number of job cards.
+        """
         
         try:
             with ThreadPoolExecutor(max_workers=10) as executor:
@@ -161,8 +204,6 @@ class Trabalha:
             if len(cards) ==0:
                 return [[], 0]
 
-            # Loop through each card element and extract the relevant information
-            #results = [get_job_info(card, plavras) for card in cards]
             results = []
             
             jobs_data_list = []
@@ -179,9 +220,6 @@ class Trabalha:
             results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)
-    
-        #    for job in job_data_list:
-         #     results.append(job)
       
             return [results, total_cards]
   

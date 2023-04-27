@@ -166,8 +166,6 @@ class Gupy:
             if len(cards) ==0:
                 return [[], 0]
 
-            # Loop through each card element and extract the relevant information
-            #results = [get_job_info(card, plavras) for card in cards]
             results = []
             
             jobs_data_list = []

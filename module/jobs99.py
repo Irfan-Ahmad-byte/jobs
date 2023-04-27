@@ -99,11 +99,8 @@ class Jobs99:
             if res.status_code==200:
                 time.sleep(.5)
                 html = res.content
-      
-                # Parse the HTML content using BeautifulSoup library (or any other method)
                 soup = BeautifulSoup(html, "html.parser")
             
-                # Find all the elements with class name 'base-card' which contain each job listing
                 self.cards.extend(soup.find_all('a', class_='opportunity-card'))
                 
                 if len(self.cards)>self.card_num:
@@ -128,7 +125,7 @@ class Jobs99:
         
         if self.timeout_event.is_set():
             return {}
-        # Get the text content and href attribute of the title link element
+            
         jobTitle = None
         dayPosted = None
         description = None
@@ -141,8 +138,7 @@ class Jobs99:
             location = 'location not given'
 
         jobDesc = self.extractDescription(jobURL)
-  
-        # Get the text content of the company link element
+
         try:
             companyName = card.find('div', class_='opportunity-company-infos').find("h2").text.strip()
         except:
@@ -150,7 +146,6 @@ class Jobs99:
         
         if jobDesc is not None:
             jobTitle = jobDesc['job_title']
-            # Get the text content of the date span element
             dayPosted = jobDesc['days_ramained']
     
             try:
@@ -168,7 +163,6 @@ class Jobs99:
             }
       
             print('JOB: ', json.dumps(job, indent=2))
-            # Create a dictionary with all these information and append it to results list 
             return job
 
 
@@ -191,10 +185,7 @@ class Jobs99:
                 description_page_info = {}
                 html = res.content
 
-                # Parse the HTML content using BeautifulSoup library (or any other method)
                 soup = BeautifulSoup(html, "html.parser")
-    
-                # Find the element with class name 'description__text' which contains the job's description
                 descriptionDiv = soup.find("div", class_="opportunities-details")
       
                 side_bar = soup.find('div', class_='details')
@@ -231,10 +222,6 @@ class Jobs99:
 
         except Exception as e:
             print('Error while getting job description: %s, %s', str(e), url)
-
-            #print('Finished getting job description from %s', url)
-
-            # Return result dictionary 
             return None
         
     def main(self):
@@ -256,9 +243,6 @@ class Jobs99:
 
             if len(cards) ==0:
                 return [[], 0]
-
-            # Loop through each card element and extract the relevant information
-            #results = [get_job_info(card, plavras) for card in cards]
             results = []
             
             jobs_data_list = []
@@ -275,9 +259,6 @@ class Jobs99:
             results = [jb for jb in jobs_data_list if jb]
     
             total_cards = len(results)
-    
-        #    for job in job_data_list:
-         #     results.append(job)
       
             return [results, total_cards]
   

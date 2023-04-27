@@ -114,6 +114,9 @@ def extractJobs(urls:list, plavras:list, timeout_event: Event, time_period, card
     Args:
         urls (List[str]): A list of LinkedIn job search URLs.
         plavras (List[str]): A list of keywords to rate the jobs.
+        timeout_event: an instance of threading Event to handle timeout
+        time_period: str: time period based on LinkedIn time_period params
+        card_num: int: number of cards per job keyword
     
     Returns:
         Tuple[List[dict], int]: A tuple containing a list of job dictionaries and the total number of cards.
@@ -362,7 +365,13 @@ def get_jobs(user_params: JobsParams):
 
 # Define a GET endpoint that takes a query parameter 'url' and returns the result of extractJobs function
 @app.get("/")
-def display_jobs():
+def home():
+  """
+    Displays a "Hello World" message.
+
+    Returns:
+        Dict[str, str]: A dictionary containing a greeting message.
+  """
   
   ress = {
       'Hello World': 'Hello World, welcome to Jobs API.'
